@@ -1,0 +1,32 @@
+{
+  "name": "quantpulse",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "description": "High-frequency commodity and solar market intelligence platform",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "dev:frontend": "turbo run dev --filter=@quantpulse/frontend",
+    "dev:backend": "turbo run dev --filter=@quantpulse/backend",
+    "dev:worker": "turbo run dev --filter=@quantpulse/worker",
+    "db:generate": "turbo run db:generate --filter=@quantpulse/database",
+    "db:migrate": "turbo run db:migrate --filter=@quantpulse/database",
+    "db:seed": "turbo run db:seed --filter=@quantpulse/database"
+  },
+  "keywords": [
+    "commodity",
+    "market-data",
+    "solar",
+    "mcx",
+    "trading",
+    "dashboard"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "turbo": "^2.8.20"
+  }
+}
