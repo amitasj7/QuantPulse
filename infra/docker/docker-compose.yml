@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Databases & Cache
+  # ============================================
+  
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: quantpulse-db
+    environment:
+      POSTGRES_USER: quantpulse
+      POSTGRES_PASSWORD: quantpulse_dev
+      POSTGRES_DB: quantpulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quantpulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: quantpulse-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Application Services (dev mode)
+  # ============================================
+
+  # backend:
+  #   build:
+  #     context: ../../
+  #     dockerfile: apps/backend/Dockerfile
+  #   container_name: quantpulse-backend
+  #   ports:
+  #     - "4000:4000"
+  #   env_file:
+  #     - ../../.env
+  #   depends_on:
+  #     timescaledb:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # worker:
+  #   build:
+  #     context: ../../
+  #     dockerfile: apps/worker/Dockerfile
+  #   container_name: quantpulse-worker
+  #   env_file:
+  #     - ../../.env
+  #   depends_on:
+  #     timescaledb:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+volumes:
+  timescaledb_data:
+  redis_data:
