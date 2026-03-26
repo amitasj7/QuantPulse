@@ -1,0 +1,115 @@
+{
+  "projectManifest": {
+    "projectName": "QuantPulse",
+    "version": "1.0.0",
+    "description": "High-frequency commodity and solar market intelligence platform.",
+    "architecturePattern": "Event-Driven Microservices + Lambda Architecture"
+  },
+  "technologyStack": {
+    "frontend": {
+      "framework": "Next.js 15 (App Router)",
+      "language": "TypeScript",
+      "styling": "Tailwind CSS + shadcn/ui",
+      "stateManagement": "Zustand (Global) + TanStack Query (Server State)",
+      "dataVisualization": "Lightweight Charts (TradingView) for OHLC/Candlesticks",
+      "realtimeTransport": "Socket.io-client"
+    },
+    "backend": {
+      "framework": "NestJS (Node.js)",
+      "language": "TypeScript",
+      "apiGateway": "Express.js adapter under NestJS",
+      "realtimeServer": "Socket.io (WebSocket with polling fallback)",
+      "jobQueue": "BullMQ (backed by Redis) for scheduled API fetching"
+    },
+    "databaseAndCaching": {
+      "timeSeriesDB": "TimescaleDB (PostgreSQL extension for financial data)",
+      "inMemoryCache": "Redis (for live ticker tape and session management)",
+      "orm": "Prisma ORM"
+    }
+  },
+  "dataPipelines": {
+    "indianMarket_Option1": {
+      "source": "Broker API (e.g., Zerodha Kite Connect / Upstox)",
+      "protocol": "WebSocket",
+      "targetAssets": [
+        "MCX_ALUMINIUM",
+        "MCX_SILVER",
+        "MCX_GOLD",
+        "MCX_CRUDEOIL"
+      ],
+      "costStrategy": "Utilize existing trading account API limits (~₹2000/month or free depending on broker)"
+    },
+    "globalMarket_Option3": {
+      "source": "International Feeds (e.g., OANDA API, Alpha Vantage, InfoLink/OPIS free tiers)",
+      "protocol": "REST API (Polling via BullMQ cron jobs)",
+      "targetAssets": [
+        "POLYSILICON_USD",
+        "SOLAR_MODULE_WATT",
+        "USD_INR_FOREX"
+      ],
+      "costStrategy": "Free tier polling every 1-4 hours for non-volatile solar data"
+    }
+  },
+  "problemSolvingStrategies": {
+    "problem1_webSocketConnectionStability": {
+      "challenge": "Broker WebSockets disconnect frequently or drop packets under high load.",
+      "solutionArchitecture": {
+        "pattern": "Dedicated Worker Microservice",
+        "implementation": "Create an isolated Node.js process that ONLY handles the broker WS connection. If it crashes, the main backend API remains unaffected.",
+        "resilience": "Implement Exponential Backoff (reconnect in 1s, 2s, 4s, 8s) on 'disconnect' events. Store the last received tick in Redis."
+      }
+    },
+    "problem2_dataNormalization": {
+      "challenge": "MCX data is in INR/Kg, Global Solar data is in USD/Watt. Structure is entirely different.",
+      "solutionArchitecture": {
+        "pattern": "Adapter / Facade Pattern",
+        "implementation": "Build a 'Data Normalizer' pipeline. 1. Fetch live USD/INR rate. 2. Pass all incoming ticks through a formatting function.",
+        "outputSchema": {
+          "assetId": "string",
+          "timestamp": "ISO8601",
+          "currentPriceINR": "float",
+          "currentPriceUSD": "float",
+          "percentageChange24h": "float",
+          "sourceProvider": "enum(BROKER, GLOBAL_API)"
+        }
+      }
+    },
+    "problem3_databaseBloat": {
+      "challenge": "Saving 5 ticks per second for 10 commodities will crash standard relational databases within weeks.",
+      "solutionArchitecture": {
+        "pattern": "OHLC Aggregation via TimescaleDB Continuous Aggregates",
+        "implementation": "Store raw ticks in a 'hypertable' for only 24 hours. Use TimescaleDB policies to automatically aggregate ticks into 1-minute, 5-minute, and 1-hour Open-High-Low-Close (OHLC) candles.",
+        "queryStrategy": "Frontend requests the 1-minute aggregate table, not the raw tick table, reducing payload size by 99%."
+      }
+    }
+  },
+  "uiUxDesignSystem": {
+    "theme": "Dark Mode Default (Financial Terminal Aesthetic)",
+    "colorPalette": {
+      "background": "#0B0E11",
+      "surface": "#1E2329",
+      "textPrimary": "#EAECEF",
+      "bullishUp": "#0ECB81",
+      "bearishDown": "#F6465D"
+    },
+    "layoutStructure": {
+      "header": "Global Ticker Tape (Scrolling live prices)",
+      "sidebar": "Asset Watchlist & Portfolio Navigation",
+      "mainDashboard": {
+        "topSection": "Bento-grid summary cards (Gold, Silver, Polysilicon)",
+        "middleSection": "Interactive Lightweight Chart (Canvas based)",
+        "bottomSection": "Solar Supply Chain Price Waterfall (Wafer -> Cell -> Module)"
+      }
+    }
+  },
+  "deploymentStrategy": {
+    "containerization": "Docker & Docker Compose",
+    "hosting": {
+      "frontend": "Vercel (for edge caching and fast Next.js hydration)",
+      "backend": "AWS EC2 or DigitalOcean Droplet (Ubuntu)",
+      "database": "Managed TimescaleDB Cloud or self-hosted Docker volume",
+      "cache": "Managed Redis (Upstash) or self-hosted"
+    },
+    "ci_cd": "GitHub Actions (Lint -> Build -> Push Docker Image -> Restart PM2/Docker)"
+  }
+}
