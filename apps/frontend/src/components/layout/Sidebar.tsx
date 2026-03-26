@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { 
   BarChart3, 
   Sun, 
@@ -6,48 +9,137 @@ import {
   LineChart, 
   Newspaper, 
   Bell, 
-  Settings 
+  Settings,
+  X,
+  Moon,
+  Monitor
 } from "lucide-react";
+import { useUIStore } from "@/stores/useUIStore";
 
 export function Sidebar() {
-  return (
-    <aside className="w-64 border-r border-white/10 bg-[#0B0E11]/80 backdrop-blur-md hidden md:flex flex-col h-full shrink-0">
-      <div className="h-16 flex items-center px-6 border-b border-white/10">
-        <div className="font-bold text-xl flex items-center gap-2 text-white">
-          <BarChart3 className="text-emerald-400 h-6 w-6" />
-          Quant<span className="text-emerald-400">Pulse</span>
-        </div>
-      </div>
-      
-      <div className="flex flex-col py-6 px-4 gap-2 flex-1">
-        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5 text-white font-medium">
-          <Home className="h-5 w-5 text-emerald-400" />
-          Dashboard
-        </Link>
-        <Link href="/commodities" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
-          <LineChart className="h-5 w-5" />
-          MCX Commodities
-        </Link>
-        <Link href="/solar" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
-          <Sun className="h-5 w-5" />
-          Solar Industry
-        </Link>
-        <Link href="/news" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
-          <Newspaper className="h-5 w-5" />
-          Market News
-        </Link>
-        <Link href="/alerts" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
-          <Bell className="h-5 w-5" />
-          Alerts
-        </Link>
-      </div>
+  const { isSidebarOpen, setSidebarOpen, theme, setTheme } = useUIStore();
+  const [mounted, setMounted] = useState(false);
 
-      <div className="p-4 mt-auto">
-        <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
-          <Settings className="h-5 w-5" />
-          Settings
-        </Link>
-      </div>
-    </aside>
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSidebarOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [setSidebarOpen]);
+
+  // Handle Hydration for Theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Apply Theme class to HTML element
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Remove both explicitly first, then add if needed
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      if (isSystemDark) root.classList.add('dark');
+      else root.classList.add('light'); // Optional depending on how light is set
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
+
+  // Ensure hydration matches text rendering
+  const isLight = mounted && theme === 'light';
+  const isDark = mounted && theme === 'dark';
+  const isSystem = mounted && theme === 'system';
+
+  return (
+    <>
+      {/* Backdrop overlay (click outside) */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Drawer */}
+      <aside 
+        className={`fixed top-0 left-0 h-full w-64 border-r border-white/10 bg-[#0B0E11]/95 backdrop-blur-md flex flex-col shrink-0 z-50 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="h-16 flex items-center justify-between px-6 border-b border-white/10 shrink-0">
+          <div className="font-bold text-xl flex items-center gap-2 text-white">
+            <BarChart3 className="text-emerald-400 h-6 w-6" />
+            Quant<span className="text-emerald-400">Pulse</span>
+          </div>
+          <button 
+            onClick={() => setSidebarOpen(false)}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="flex flex-col py-6 px-4 gap-2 flex-1 overflow-y-auto custom-scrollbar">
+          <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5 text-white font-medium">
+            <Home className="h-5 w-5 text-emerald-400" />
+            Dashboard
+          </Link>
+          <Link href="/commodities" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
+            <LineChart className="h-5 w-5" />
+            MCX Commodities
+          </Link>
+          <Link href="/solar" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
+            <Sun className="h-5 w-5" />
+            Solar Industry
+          </Link>
+          <Link href="/news" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
+            <Newspaper className="h-5 w-5" />
+            Market News
+          </Link>
+          <Link href="/alerts" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
+            <Bell className="h-5 w-5" />
+            Alerts
+          </Link>
+        </div>
+
+        <div className="p-4 mt-auto border-t border-white/5 flex flex-col gap-4">
+          
+          {/* Theme Toggle */}
+          <div className="flex items-center bg-white/5 rounded-lg p-1">
+            <button 
+              onClick={() => setTheme('light')}
+              className={`flex-1 flex justify-center items-center py-2 rounded-md transition-all ${isLight ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+              title="Light Mode"
+            >
+              <Sun className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={() => setTheme('dark')}
+              className={`flex-1 flex justify-center items-center py-2 rounded-md transition-all ${isDark ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+              title="Dark Mode"
+            >
+              <Moon className="h-4 w-4" />
+            </button>
+            <button 
+              onClick={() => setTheme('system')}
+              className={`flex-1 flex justify-center items-center py-2 rounded-md transition-all ${isSystem ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+              title="System Default"
+            >
+              <Monitor className="h-4 w-4" />
+            </button>
+          </div>
+
+          <Link href="/settings" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors font-medium">
+            <Settings className="h-5 w-5 shrink-0" />
+            Settings
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }

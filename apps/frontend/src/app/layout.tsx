@@ -25,8 +25,37 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var storage = window.localStorage.getItem('quantpulse-ui-storage');
+                var theme = 'dark'; // default
+                if (storage) {
+                  var parsed = JSON.parse(storage);
+                  if (parsed.state && parsed.state.theme) {
+                    theme = parsed.state.theme;
+                  }
+                }
+                var root = document.documentElement;
+                if (theme === 'system') {
+                  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    root.classList.add('dark');
+                  } else {
+                    root.classList.add('light');
+                  }
+                } else {
+                  root.classList.add(theme);
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
