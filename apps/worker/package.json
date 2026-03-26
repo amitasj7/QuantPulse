@@ -1,0 +1,29 @@
+{
+  "name": "@quantpulse/worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QuantPulse isolated data feed worker (broker WS + global API polling)",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@quantpulse/database": "workspace:*",
+    "@quantpulse/shared": "workspace:*",
+    "axios": "^1.0.0",
+    "bullmq": "^5.0.0",
+    "dotenv": "^16.0.0",
+    "ioredis": "^5.0.0",
+    "ws": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.0.0",
+    "rimraf": "^5.0.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.0"
+  }
+}
