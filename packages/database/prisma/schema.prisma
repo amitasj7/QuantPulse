@@ -1,0 +1,93 @@
+// QuantPulse Prisma Schema
+// Database: TimescaleDB (PostgreSQL extension)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Commodity & Asset Models
+// ============================================
+
+model Commodity {
+  id        String   @id @default(cuid())
+  assetId   String   @unique        // e.g., MCX_GOLD, POLYSILICON_USD
+  name      String
+  symbol    String
+  category  String                  // METAL, ENERGY, INDUSTRIAL, SOLAR
+  unit      String                  // INR/Kg, USD/Watt, etc.
+  exchange  String?                 // MCX, GLOBAL
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prices    PriceHistory[]
+  news      CommodityNews[]
+
+  @@map("commodities")
+}
+
+// ============================================
+// Price History (TimescaleDB Hypertable)
+// ============================================
+
+model PriceHistory {
+  id              String   @default(cuid())
+  commodityId     String
+  commodity       Commodity @relation(fields: [commodityId], references: [id])
+  priceINR        Float
+  priceUSD        Float
+  open            Float?
+  high            Float?
+  low             Float?
+  close           Float?
+  volume          Float?
+  percentChange   Float?
+  sourceProvider  String           // BROKER, GLOBAL_API
+  interval        String           // raw, 1m, 5m, 1h, 1d
+  timestamp       DateTime
+
+  @@id([id, timestamp])
+  @@index([commodityId, timestamp])
+  @@index([timestamp])
+  @@map("price_history")
+}
+
+// ============================================
+// News
+// ============================================
+
+model CommodityNews {
+  id           String    @id @default(cuid())
+  commodityId  String?
+  commodity    Commodity? @relation(fields: [commodityId], references: [id])
+  title        String
+  summary      String?
+  sourceUrl    String
+  sourceName   String
+  sentiment    String?            // POSITIVE, NEGATIVE, NEUTRAL
+  publishedAt  DateTime
+  createdAt    DateTime  @default(now())
+
+  @@index([commodityId, publishedAt])
+  @@map("commodity_news")
+}
+
+// ============================================
+// Forex Rates
+// ============================================
+
+model ForexRate {
+  id        String   @id @default(cuid())
+  pair      String                 // e.g., USD_INR
+  rate      Float
+  timestamp DateTime
+
+  @@index([pair, timestamp])
+  @@map("forex_rates")
+}
