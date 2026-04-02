@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { DataSync } from "@/components/providers/DataSync";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -16,6 +17,30 @@ export const metadata: Metadata = {
   title: "QuantPulse | Commodity & Market Data",
   description: "High-frequency commodity and solar market intelligence platform",
 };
+
+// Inline theme script as a string to avoid React hydration warnings
+const themeScript = `
+  try {
+    var storage = window.localStorage.getItem('quantpulse-ui-storage');
+    var theme = 'dark';
+    if (storage) {
+      var parsed = JSON.parse(storage);
+      if (parsed.state && parsed.state.theme) {
+        theme = parsed.state.theme;
+      }
+    }
+    var root = document.documentElement;
+    if (theme === 'system') {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.add('light');
+      }
+    } else {
+      root.classList.add(theme);
+    }
+  } catch (e) {}
+`;
 
 export default function RootLayout({
   children,
@@ -30,33 +55,14 @@ export default function RootLayout({
     >
       <head>
         <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var storage = window.localStorage.getItem('quantpulse-ui-storage');
-                var theme = 'dark'; // default
-                if (storage) {
-                  var parsed = JSON.parse(storage);
-                  if (parsed.state && parsed.state.theme) {
-                    theme = parsed.state.theme;
-                  }
-                }
-                var root = document.documentElement;
-                if (theme === 'system') {
-                  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    root.classList.add('dark');
-                  } else {
-                    root.classList.add('light');
-                  }
-                } else {
-                  root.classList.add(theme);
-                }
-              } catch (e) {}
-            `,
-          }}
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+          suppressHydrationWarning
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <DataSync />
+        {children}
+      </body>
     </html>
   );
 }

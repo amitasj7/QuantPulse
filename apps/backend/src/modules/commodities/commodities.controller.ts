@@ -6,8 +6,8 @@ export class CommoditiesController {
   constructor(private readonly commoditiesService: CommoditiesService) {}
 
   @Get()
-  findAll() {
-    return this.commoditiesService.findAll();
+  findAll(@Query('category') category?: string) {
+    return this.commoditiesService.findAll(category);
   }
 
   @Get(':id')

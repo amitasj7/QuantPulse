@@ -28,5 +28,9 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "turbo": "^2.8.20"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

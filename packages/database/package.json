@@ -8,11 +8,11 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:seed": "ts-node prisma/seed.ts",
-    "db:studio": "prisma studio",
+    "db:generate": "bunx prisma generate",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:push": "bunx prisma db push",
+    "db:seed": "bunx ts-node prisma/seed.ts",
+    "db:studio": "bunx prisma studio",
     "clean": "rimraf dist"
   },
   "dependencies": {

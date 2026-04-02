@@ -1,79 +1,169 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
-import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries } from 'lightweight-charts';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, ColorType } from 'lightweight-charts';
 import { NormalizedTick } from '@quantpulse/shared';
 
 interface TradingChartProps {
   data: NormalizedTick[];
   liveTick?: NormalizedTick;
   assetName: string;
+  onIntervalChange?: (interval: string) => void;
 }
 
-export function TradingChart({ data, liveTick, assetName }: TradingChartProps) {
+const TIME_INTERVALS = [
+  { label: '1D', value: '1d' },
+  { label: '1W', value: '1w' },
+  { label: '1M', value: '1m' },
+  { label: '1Y', value: '1y' },
+  { label: '5Y', value: '5y' },
+  { label: 'Max', value: 'max' },
+];
+
+export function TradingChart({ data, liveTick, assetName, onIntervalChange }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
+  const [activeInterval, setActiveInterval] = useState('1m');
+
+  // OHLC header data
+  const [headerData, setHeaderData] = useState<{
+    open: number; high: number; low: number; close: number; change: number; changePercent: number;
+  } | null>(null);
+
+  const formatOHLC = useCallback(() => {
+    if (liveTick) {
+      const change = liveTick.close - liveTick.open;
+      const changePercent = liveTick.open !== 0 ? (change / liveTick.open) * 100 : 0;
+      setHeaderData({
+        open: liveTick.open,
+        high: liveTick.high,
+        low: liveTick.low,
+        close: liveTick.close,
+        change,
+        changePercent,
+      });
+    } else if (data.length > 0) {
+      const lastCandle = data[data.length - 1];
+      const change = lastCandle.close - lastCandle.open;
+      const changePercent = lastCandle.open !== 0 ? (change / lastCandle.open) * 100 : 0;
+      setHeaderData({
+        open: lastCandle.open,
+        high: lastCandle.high,
+        low: lastCandle.low,
+        close: lastCandle.close,
+        change,
+        changePercent,
+      });
+    }
+  }, [liveTick, data]);
+
+  useEffect(() => { formatOHLC(); }, [formatOHLC]);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // 1. Setup the chart instance
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94A3B8' : '#475569';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.06)';
+
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { color: 'transparent' },
-        textColor: '#94A3B8', // text-slate-400
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor,
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        vertLines: { color: gridColor },
+        horzLines: { color: gridColor },
       },
       crosshair: {
         mode: 1,
-        vertLine: { width: 1, color: '#0ECB81', style: 3 },
-        horzLine: { width: 1, color: '#0ECB81', style: 3 },
+        vertLine: { width: 1, color: '#0ECB81', style: 3, labelBackgroundColor: '#0ECB81' },
+        horzLine: { width: 1, color: '#0ECB81', style: 3, labelBackgroundColor: '#0ECB81' },
       },
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
         borderVisible: false,
+        borderColor: isDark ? '#1E293B' : '#E2E8F0',
+      },
+      rightPriceScale: {
+        borderVisible: false,
+        borderColor: isDark ? '#1E293B' : '#E2E8F0',
       },
       autoSize: true,
     });
 
     chartRef.current = chart;
 
-    // 2. Add Candlestick Series
+    // Candlestick series
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#10B981', // emerald-500
-      downColor: '#F43F5E', // rose-500
+      upColor: '#10B981',
+      downColor: '#F43F5E',
       borderVisible: false,
       wickUpColor: '#10B981',
       wickDownColor: '#F43F5E',
     });
+    candleSeriesRef.current = candleSeries;
 
-    seriesRef.current = candleSeries;
+    // Volume histogram series
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'volume',
+    });
+    chart.priceScale('volume').applyOptions({
+      scaleMargins: { top: 0.85, bottom: 0 },
+    });
+    volumeSeriesRef.current = volumeSeries;
 
-    // 3. Transform Initial Data
+    // Set data
     if (data && data.length > 0) {
-      // Sort in ascending order internally for TradingView
-      const formattedData = [...data].sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()).map(t => ({
-        time: (new Date(t.timestamp).getTime() / 1000) as Time,
-        open: t.open,
-        high: t.high,
-        low: t.low,
-        close: t.close,
-      }));
-      
-      // Remove possible duplicates by using a Set/Map logic if needed, but assuming data is clean
-      // TradingView strict mode: time must be strictly increasing. 
-      // Filter out duplicate identical timestamps
-      const uniqueData = Array.from(new Map(formattedData.map(item => [item.time, item])).values());
+      const sortedData = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-      candleSeries.setData(uniqueData);
+      const validData = sortedData.filter(t => !isNaN(new Date(t.timestamp).getTime()));
+
+      const candleData = validData.map(t => ({
+        time: Math.floor(new Date(t.timestamp).getTime() / 1000) as Time,
+        open: Number(t.open),
+        high: Number(t.high),
+        low: Number(t.low),
+        close: Number(t.close),
+      }));
+
+      const volumeData = validData.map(t => ({
+        time: Math.floor(new Date(t.timestamp).getTime() / 1000) as Time,
+        value: Number(t.volume || 0),
+        color: Number(t.close) >= Number(t.open) ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)',
+      }));
+
+      // Deduplicate
+      const uniqueCandle = Array.from(new Map(candleData.map(item => [item.time, item])).values());
+      const uniqueVolume = Array.from(new Map(volumeData.map(item => [item.time, item])).values());
+
+      candleSeries.setData(uniqueCandle);
+      volumeSeries.setData(uniqueVolume);
     }
 
-    // Cleanup
+    // Crosshair move handler for OHLC updates
+    chart.subscribeCrosshairMove((param) => {
+      if (param.seriesData && param.seriesData.size > 0) {
+        const candlePoint = param.seriesData.get(candleSeries) as any;
+        if (candlePoint) {
+          const change = candlePoint.close - candlePoint.open;
+          const changePercent = candlePoint.open !== 0 ? (change / candlePoint.open) * 100 : 0;
+          setHeaderData({
+            open: candlePoint.open,
+            high: candlePoint.high,
+            low: candlePoint.low,
+            close: candlePoint.close,
+            change,
+            changePercent,
+          });
+        }
+      }
+    });
+
     const handleResize = () => {
       if (chartContainerRef.current) {
         chart.applyOptions({ width: chartContainerRef.current.clientWidth });
@@ -86,37 +176,81 @@ export function TradingChart({ data, liveTick, assetName }: TradingChartProps) {
       window.removeEventListener('resize', handleResize);
       chart.remove();
       chartRef.current = null;
-      seriesRef.current = null;
+      candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
     };
-  }, [data]); // Re-create chart only when massive history loads
+  }, [data]);
 
-  // 4. Handle Live Updates Effect
+  // Live tick updates
   useEffect(() => {
-    if (!seriesRef.current || !liveTick) return;
+    if (!candleSeriesRef.current || !volumeSeriesRef.current || !liveTick) return;
 
-    // Convert live tick into TV format
-    const tvTick = {
-      time: (new Date(liveTick.timestamp).getTime() / 1000) as Time,
-      open: liveTick.open,
-      high: liveTick.high,
-      low: liveTick.low,
-      close: liveTick.close,
-    };
-
-    // Update the last candle or add a new one magically
+    const time = Math.floor(new Date(liveTick.timestamp).getTime() / 1000) as Time;
+    
     try {
-      seriesRef.current.update(tvTick);
-    } catch(e) {
-      console.warn("TradingView update skip (timestamp mismatch)", e);
+      candleSeriesRef.current.update({
+        time,
+        open: Number(liveTick.open),
+        high: Number(liveTick.high),
+        low: Number(liveTick.low),
+        close: Number(liveTick.close),
+      });
+      volumeSeriesRef.current.update({
+        time,
+        value: Number(liveTick.volume || 0),
+        color: Number(liveTick.close) >= Number(liveTick.open) ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)',
+      });
+    } catch (e) {
+      // Ignore timestamp ordering issues
     }
   }, [liveTick]);
 
+  const handleIntervalChange = (interval: string) => {
+    setActiveInterval(interval);
+    onIntervalChange?.(interval);
+  };
+
+  const isUp = headerData ? headerData.close >= headerData.open : true;
+
   return (
-    <div className="w-full h-full relative">
-      <div 
-        ref={chartContainerRef} 
-        className="w-full h-full absolute inset-0" 
-      />
+    <div className="w-full h-full flex flex-col">
+      {/* OHLC Header Bar */}
+      <div className="flex items-center gap-4 px-4 py-2 text-xs font-mono border-b border-border/50 overflow-x-auto shrink-0">
+        <span className="font-bold text-foreground text-sm whitespace-nowrap">{assetName}</span>
+        {headerData && (
+          <>
+            <span className="text-text-secondary whitespace-nowrap">O <span className="text-foreground">{headerData.open.toFixed(2)}</span></span>
+            <span className="text-text-secondary whitespace-nowrap">H <span className="text-foreground">{headerData.high.toFixed(2)}</span></span>
+            <span className="text-text-secondary whitespace-nowrap">L <span className="text-foreground">{headerData.low.toFixed(2)}</span></span>
+            <span className="text-text-secondary whitespace-nowrap">C <span className={isUp ? 'text-bullish' : 'text-bearish'}>{headerData.close.toFixed(2)}</span></span>
+            <span className={`whitespace-nowrap font-semibold ${isUp ? 'text-bullish' : 'text-bearish'}`}>
+              {headerData.change > 0 && '+'}{headerData.change.toFixed(2)} ({headerData.changePercent > 0 && '+'}{headerData.changePercent.toFixed(2)}%)
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Chart Area */}
+      <div className="flex-1 relative min-h-[300px] w-full h-full">
+        <div ref={chartContainerRef} className="absolute inset-0 w-full h-full" />
+      </div>
+
+      {/* Time Interval Toolbar */}
+      <div className="flex items-center gap-1 px-4 py-2 border-t border-border/50 shrink-0">
+        {TIME_INTERVALS.map((interval) => (
+          <button
+            key={interval.value}
+            onClick={() => handleIntervalChange(interval.value)}
+            className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
+              activeInterval === interval.value
+                ? 'bg-bullish text-white'
+                : 'text-text-secondary hover:text-foreground hover:bg-surface-hover'
+            }`}
+          >
+            {interval.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

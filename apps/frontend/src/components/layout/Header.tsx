@@ -7,20 +7,20 @@ export function Header() {
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
 
   return (
-    <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-white/10 bg-[#0B0E11]/80 backdrop-blur-md shrink-0">
+    <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border bg-background/80 backdrop-blur-md shrink-0">
       <div className="flex items-center gap-4 flex-1">
         <button 
           onClick={toggleSidebar}
-          className="p-2 -ml-2 text-slate-400 hover:text-white rounded-md hover:bg-white/5 transition-colors"
+          className="p-2 -ml-2 text-text-secondary hover:text-foreground rounded-md hover:bg-surface transition-colors"
         >
           <Menu className="h-6 w-6" />
         </button>
         <div className="max-w-xl hidden sm:flex items-center relative w-full">
-          <Search className="h-4 w-4 absolute left-3 text-slate-400" />
+          <Search className="h-4 w-4 absolute left-3 text-text-secondary" />
           <input 
             type="text" 
             placeholder="Search commodities, indices, solar assets..." 
-            className="w-full bg-white/5 border border-white/10 rounded-full h-10 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 text-white placeholder-slate-400 transition-all"
+            className="w-full bg-surface border border-border rounded-full h-10 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-bullish text-foreground placeholder-text-secondary transition-all"
           />
         </div>
       </div>
@@ -28,14 +28,14 @@ export function Header() {
       <div className="flex items-center gap-4 ml-auto">
         <div className="flex items-center gap-2">
           <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bullish opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-bullish"></span>
           </span>
-          <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest hidden sm:inline-block">Market Open</span>
+          <span className="text-xs font-semibold text-bullish uppercase tracking-widest hidden sm:inline-block">Market Open</span>
         </div>
-        <div className="h-8 w-px bg-white/10 mx-2 hidden sm:block"></div>
-        <button className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white">
-          <UserCircle className="h-8 w-8 text-slate-400" />
+        <div className="h-8 w-px bg-border mx-2 hidden sm:block"></div>
+        <button className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-foreground">
+          <UserCircle className="h-8 w-8 text-text-secondary" />
         </button>
       </div>
     </header>

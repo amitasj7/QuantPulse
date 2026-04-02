@@ -17,4 +17,18 @@ export class SolarService {
       orderBy: { name: 'asc' },
     });
   }
+
+  async getPriceHistory(assetId: string, limit: number) {
+    const parsedLimit = Number(limit) || 100;
+
+    const history = await this.prisma.priceHistory.findMany({
+      where: {
+        commodity: { assetId },
+      },
+      orderBy: { timestamp: 'desc' },
+      take: parsedLimit,
+    });
+
+    return history.reverse();
+  }
 }

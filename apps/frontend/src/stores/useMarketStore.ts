@@ -1,12 +1,23 @@
 import { create } from 'zustand';
 import { NormalizedTick } from '@quantpulse/shared';
-import { getCommodities, getSolarMetrics, getPriceHistory } from '../lib/api';
+import { 
+  getCommodities, 
+  getSolarMetrics, 
+  getPriceHistory, 
+  getNews, 
+  getLatestForexRate,
+  NewsItem,
+  ForexRateItem,
+} from '../lib/api';
 
 interface Commodity {
   id: string;
   assetId: string;
   name: string;
+  symbol: string;
   category: string;
+  unit: string;
+  exchange: string;
   prices?: NormalizedTick[];
 }
 
@@ -15,12 +26,16 @@ interface MarketState {
   solarAssets: Record<string, Commodity>;
   historicalData: Record<string, NormalizedTick[]>;
   liveTicks: Record<string, NormalizedTick>;
+  news: NewsItem[];
+  forexRate: ForexRateItem | null;
   loading: boolean;
   selectedAssetId: string;
   
   // Actions
   fetchInitialData: () => Promise<void>;
   fetchHistory: (assetId: string) => Promise<void>;
+  fetchNews: (commodityId?: string) => Promise<void>;
+  fetchForexRate: () => Promise<void>;
   updateLiveTick: (tick: NormalizedTick) => void;
   setSelectedAssetId: (assetId: string) => void;
 }
@@ -30,6 +45,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   solarAssets: {},
   historicalData: {},
   liveTicks: {},
+  news: [],
+  forexRate: null,
   loading: false,
   selectedAssetId: 'MCX_GOLD',
 
@@ -38,7 +55,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     try {
       const [comms, solar] = await Promise.all([
         getCommodities(),
-        getSolarMetrics()
+        getSolarMetrics(),
       ]);
 
       const commMap: Record<string, Commodity> = {};
@@ -69,6 +86,11 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         liveTicks: liveTicksMap,
         loading: false 
       });
+
+      // Also fetch news and forex in background
+      get().fetchNews();
+      get().fetchForexRate();
+      get().fetchHistory(get().selectedAssetId);
     } catch (e) {
       console.error('Failed to fetch initial market data', e);
       set({ loading: false });
@@ -89,11 +111,28 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
+  fetchNews: async (commodityId?: string) => {
+    try {
+      const news = await getNews(10, commodityId);
+      set({ news });
+    } catch (e) {
+      console.error('Failed to fetch news', e);
+    }
+  },
+
+  fetchForexRate: async () => {
+    try {
+      const rate = await getLatestForexRate('USD_INR');
+      set({ forexRate: rate });
+    } catch (e) {
+      console.error('Failed to fetch forex rate', e);
+    }
+  },
+
   updateLiveTick: (tick: NormalizedTick) => {
     set((state) => {
       const currentHistory = state.historicalData[tick.assetId] || [];
       
-      // Prevent duplicate rendering if timestamp is identical
       const lastCandle = currentHistory[currentHistory.length - 1];
       let newHistory = [...currentHistory];
       

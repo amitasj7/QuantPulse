@@ -21,64 +21,23 @@ const SOLAR_ASSETS = [
 ];
 
 async function main() {
-  console.log('🌱 Seeding QuantPulse database...');
+  console.log('🌱 Seeding QuantPulse database (asset catalog only)...');
 
-  // 1. Seed Commodities
-  console.log('Inserting commodities...');
+  // Seed Commodities — upsert so it's safe to re-run
   const allAssets = [...MCX_ASSETS, ...SOLAR_ASSETS];
-  const commodityRecords = [];
 
   for (const asset of allAssets) {
-    const record = await prisma.commodity.upsert({
+    await prisma.commodity.upsert({
       where: { assetId: asset.assetId },
-      update: {},
+      update: { name: asset.name, symbol: asset.symbol, category: asset.category, unit: asset.unit, exchange: asset.exchange },
       create: asset,
     });
-    commodityRecords.push(record);
   }
 
-  // 2. Generate and Seed Sample Price History for MCX_GOLD
-  console.log('Generating sample price history...');
-  const gold = commodityRecords.find(c => c.assetId === 'MCX_GOLD');
-  
-  if (gold) {
-    const prices = [];
-    let currentPrice = 62450; // Starting INR price
-    const now = new Date();
-    
-    // Generate 100 hourly candles
-    for (let i = 100; i >= 0; i--) {
-      const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000);
-      const open = currentPrice;
-      const change = (Math.random() - 0.5) * 500; // Random fluctuation
-      currentPrice += change;
-      const close = currentPrice;
-      const high = Math.max(open, close) + Math.random() * 200;
-      const low = Math.min(open, close) - Math.random() * 200;
-
-      prices.push({
-        commodityId: gold.id,
-        priceINR: close,
-        priceUSD: close / 83.5, // Mock conversion rate
-        open,
-        high,
-        low,
-        close,
-        volume: Math.floor(Math.random() * 1000) + 100,
-        percentChange: (change / open) * 100,
-        sourceProvider: 'BROKER',
-        interval: '1h',
-        timestamp,
-      });
-    }
-
-    // Insert historical prices
-    await prisma.priceHistory.createMany({
-      data: prices,
-    });
-  }
-
-  console.log('✅ Seeding complete!');
+  console.log(`✅ Seeded ${allAssets.length} commodity definitions.`);
+  console.log('');
+  console.log('ℹ️  No fake price history generated.');
+  console.log('    Real prices will be fetched by the Worker using your API keys.');
 }
 
 main()

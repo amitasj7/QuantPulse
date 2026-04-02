@@ -1,3 +1,6 @@
+-- Enable TimescaleDB extension
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
 -- CreateTable
 CREATE TABLE "commodities" (
     "id" TEXT NOT NULL,
