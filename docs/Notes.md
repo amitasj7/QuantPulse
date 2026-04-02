@@ -80,7 +80,8 @@ RenIntel.com
 upstox
 pvinfo link
 
-
+renewal energy 
+solar energy 
 
 hostinger domain name - clear
 
@@ -88,3 +89,4 @@ solar prices companies
 
 ## limited time period - 
 domain name - ramversingh.com : limit 1 year
+
