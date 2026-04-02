@@ -122,3 +122,10 @@ curl "http://localhost:4000/forex/history?pair=USD_INR&limit=20"
 - Gold price is not correct. when i google it is showing    - 10g of 24k gold (99.9%) in Delhi, India is 
 1,53,850.00 Indian Rupee
    - in my website it  is showing -- 4,50,089.00
+
+
+- for help, you can read follwing angel documentation :
+   https://smartapi.angelbroking.com/docs/
+
+- implement all the features of angel one api in my project.
+- tell me what is need from my side?
