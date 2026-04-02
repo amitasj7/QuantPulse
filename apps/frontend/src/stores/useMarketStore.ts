@@ -88,7 +88,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       });
 
       // Also fetch news and forex in background
-      get().fetchNews();
+      get().fetchNews(get().selectedAssetId);
       get().fetchForexRate();
       get().fetchHistory(get().selectedAssetId);
     } catch (e) {
@@ -158,5 +158,6 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   setSelectedAssetId: (assetId: string) => {
     set({ selectedAssetId: assetId });
     get().fetchHistory(assetId);
+    get().fetchNews(assetId);
   }
 }));

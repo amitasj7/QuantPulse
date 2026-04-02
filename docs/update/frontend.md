@@ -134,3 +134,15 @@ for refrences - https://in.tradingview.com/chart/
 
 - in bottom - left side, these is a date icon, when i click on this icon then image 2 show.
   - you have to also implement this functionality to select custom date range.
+
+## update - 9
+- in upload images, news showing for a individual stock.
+- i want to show news for a individual stock that currently selected in chart.
+
+ex - suppose first stock is selected gold in chart then news will show related to gold.
+then if i select silver in chart then news will show related to silver. 
+
+- max 10 news should be shown in news section.
+- there will be 2 tag 
+  - first: stock name like silver, gold etc.
+  - second: positive, negative or neutral.

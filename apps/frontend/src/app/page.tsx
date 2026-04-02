@@ -220,14 +220,20 @@ export default function Dashboard() {
                           className="flex items-start gap-4 p-3 rounded-lg hover:bg-background/50 transition-colors group"
                         >
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              {item.commodity && (
-                                <Badge variant="outline" className="text-xs border-border px-1.5 py-0 shrink-0">
-                                  {item.commodity.symbol}
+                            <div className="flex items-center gap-2 mb-1.5">
+                              {item.commodity?.name ? (
+                                <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-border px-2 py-0 shrink-0 bg-surface text-foreground shadow-sm">
+                                  {item.commodity.name}
                                 </Badge>
+                              ) : (
+                                selectedMeta?.name && (
+                                  <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-border px-2 py-0 shrink-0 bg-surface text-foreground shadow-sm">
+                                    {selectedMeta.name}
+                                  </Badge>
+                                )
                               )}
                               {item.sentiment && (
-                                <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${sentimentColor(item.sentiment)}`}>
+                                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded shadow-sm border ${sentimentColor(item.sentiment).replace('text-', 'border-').replace('bg-', '').replace('/10', '/30')} ${sentimentColor(item.sentiment)}`}>
                                   {item.sentiment}
                                 </span>
                               )}
@@ -239,10 +245,12 @@ export default function Dashboard() {
                               <p className="text-xs text-text-secondary mt-1 line-clamp-2">{item.summary}</p>
                             )}
                             <div className="flex items-center gap-2 mt-2">
-                              <span className="text-xs text-text-secondary">{item.sourceName}</span>
-                              <span className="text-xs text-text-secondary">•</span>
-                              <span className="text-xs text-text-secondary">
-                                {new Date(item.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              <span className="text-[11px] text-text-secondary">{item.sourceName}</span>
+                              <span className="text-[10px] text-text-secondary">•</span>
+                              <span className="text-[11px] text-text-secondary">
+                                {new Date(item.publishedAt).toLocaleString('en-IN', { 
+                                  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
+                                })}
                               </span>
                             </div>
                           </div>
