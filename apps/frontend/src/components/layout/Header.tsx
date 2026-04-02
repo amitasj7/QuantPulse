@@ -4,10 +4,10 @@ import { Search, UserCircle, Menu } from "lucide-react";
 import { useUIStore } from "@/stores/useUIStore";
 
 export function Header() {
-  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const { toggleSidebar, setSearchOpen } = useUIStore();
 
   return (
-    <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border bg-background/80 backdrop-blur-md shrink-0">
+    <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border bg-background/80 backdrop-blur-md shrink-0 z-40">
       <div className="flex items-center gap-4 flex-1">
         <button 
           onClick={toggleSidebar}
@@ -15,12 +15,16 @@ export function Header() {
         >
           <Menu className="h-6 w-6" />
         </button>
-        <div className="max-w-xl hidden sm:flex items-center relative w-full">
-          <Search className="h-4 w-4 absolute left-3 text-text-secondary" />
+        <div 
+          className="max-w-xl hidden sm:flex items-center relative w-full cursor-pointer group"
+          onClick={() => setSearchOpen(true)}
+        >
+          <Search className="h-4 w-4 absolute left-3 text-text-secondary group-hover:text-bullish transition-colors" />
           <input 
             type="text" 
+            readOnly
             placeholder="Search commodities, indices, solar assets..." 
-            className="w-full bg-surface border border-border rounded-full h-10 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-bullish text-foreground placeholder-text-secondary transition-all"
+            className="w-full bg-surface border border-border cursor-pointer rounded-full h-10 pl-10 pr-4 text-sm focus:outline-none hover:border-text-secondary/50 text-foreground placeholder-text-secondary transition-all"
           />
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight, Star, Plus } from "lucide-react";
 import { useMarketStore } from "@/stores/useMarketStore";
+import { useUIStore } from "@/stores/useUIStore";
 
 interface WatchlistCategory {
   label: string;
@@ -12,6 +13,7 @@ interface WatchlistCategory {
 
 export function WatchlistPanel() {
   const { commodities, solarAssets, liveTicks, selectedAssetId, setSelectedAssetId } = useMarketStore();
+  const setSearchOpen = useUIStore(state => state.setSearchOpen);
 
   const [categories, setCategories] = useState<WatchlistCategory[]>([
     { label: 'Metals', key: 'METAL', isOpen: true },
@@ -44,7 +46,11 @@ export function WatchlistPanel() {
           <Star className="h-4 w-4 text-bullish" />
           Watchlist
         </h3>
-        <button className="text-text-secondary hover:text-foreground transition-colors" title="Add symbol">
+        <button 
+          onClick={() => setSearchOpen(true)}
+          className="text-text-secondary hover:text-foreground transition-colors hover:bg-background/50 p-1 rounded-md" 
+          title="Add symbol"
+        >
           <Plus className="h-4 w-4" />
         </button>
       </div>

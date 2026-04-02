@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Newspaper, ExternalLink, DollarSign } from "lucide-react";
 import { TickerTape } from "@/components/dashboard/TickerTape";
 import { WatchlistPanel } from "@/components/dashboard/WatchlistPanel";
+import { AssetSearchModal } from "@/components/dashboard/AssetSearchModal";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { TradingChart } from "@/components/charts/TradingChart";
@@ -74,6 +75,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+      <AssetSearchModal />
       <Sidebar />
       <div className="flex-1 flex flex-col h-full relative overflow-hidden">
         <Header />
