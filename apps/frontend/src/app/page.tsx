@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Newspaper, ExternalLink, DollarSign } from "lucide-react";
@@ -25,6 +25,33 @@ export default function Dashboard() {
 
   const [dashboardCards, setDashboardCards] = useState<string[]>([]);
   
+  // Watchlist Resize Logic
+  const [watchlistWidth, setWatchlistWidth] = useState(288);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 200 && newWidth < 600) {
+        setWatchlistWidth(newWidth);
+      }
+    };
+    
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      document.body.style.cursor = 'default';
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   useEffect(() => {
     const keys = Object.keys(commodities);
     if (dashboardCards.length === 0 && keys.length > 0) {
@@ -235,8 +262,22 @@ export default function Dashboard() {
           </main>
 
           {/* Right Sidebar — Watchlist (hidden on small screens) */}
-          <aside className="hidden xl:block w-72 shrink-0">
-            <WatchlistPanel />
+          <aside 
+            className="hidden xl:flex shrink-0 relative flex flex-col"
+            style={{ width: `${watchlistWidth}px` }}
+          >
+            {/* Edge Drag Handle */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-1 hover:w-1.5 hover:bg-bullish/50 cursor-col-resize z-50 transition-all bg-transparent"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                isDragging.current = true;
+                document.body.style.cursor = 'col-resize';
+              }}
+            />
+            <div className="flex-1 w-full h-full overflow-hidden">
+              <WatchlistPanel />
+            </div>
           </aside>
 
         </div>

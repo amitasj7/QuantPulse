@@ -117,4 +117,5 @@ for refrences - https://in.tradingview.com/chart/
 - Trading view graph is not showing. you can see image.
 - fix it. verify it by yourself after open browser.
 
-- right sidebar width is fix. update: when i drag in left sidebar, it should be expand and when i drag out, it should be shrink.
+- in upload image, left drawer is inside of moving left drawer. update: when i open left drawer, it should be top most element of screen.
+- right sidebar (watchlist section) width is fix. update: when i drag in left sidebar, it should be expand and when i drag out, it should be shrink.

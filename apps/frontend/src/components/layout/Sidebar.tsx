@@ -60,14 +60,14 @@ export function Sidebar() {
       {/* Backdrop overlay (click outside) */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Drawer */}
       <aside 
-        className={`fixed top-0 left-0 h-full w-64 border-r border-border bg-background/95 backdrop-blur-md flex flex-col shrink-0 z-50 transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-64 border-r border-border bg-background/95 backdrop-blur-md flex flex-col shrink-0 z-[100] transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
