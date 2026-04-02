@@ -5,6 +5,7 @@ import { TwelveDataConnector } from './connectors/TwelveDataConnector';
 import { AlphaVantageConnector } from './connectors/AlphaVantageConnector';
 import { ForexConnector } from './connectors/ForexConnector';
 import { NewsAPIConnector } from './connectors/NewsAPIConnector';
+import { AngelOneConnector } from './connectors/AngelOneConnector';
 import { DataNormalizer } from './normalizer/DataNormalizer';
 import * as dotenv from 'dotenv';
 import path from 'path';
@@ -29,12 +30,17 @@ const TWELVE_API_KEY = process.env.TWELVE_API_KEY?.trim();
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY?.trim();
 const USD_INR_API_KEY = process.env.USD_INR_API_KEY?.trim();
 const NEWS_API_KEY = process.env.NEWS_API_KEY?.trim();
+const BROKER_API_KEY = process.env.BROKER_API_KEY?.trim();
+const ANGEL_CLIENT_ID = process.env.ANGEL_CLIENT_ID?.trim();
+const ANGEL_PASSWORD = process.env.ANGEL_PASSWORD?.trim();
+const ANGEL_TOTP_SECRET = process.env.ANGEL_TOTP_SECRET?.trim();
 
 // Debug: show which keys were found
 console.log(`🔑 TWELVE_API_KEY: ${TWELVE_API_KEY ? '✅ found' : '❌ missing'}`);
 console.log(`🔑 ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY ? '✅ found' : '❌ missing'}`);
 console.log(`🔑 USD_INR_API_KEY: ${USD_INR_API_KEY ? '✅ found' : '❌ missing'}`);
 console.log(`🔑 NEWS_API_KEY: ${NEWS_API_KEY ? '✅ found' : '❌ missing'}`);
+console.log(`🔑 ANGEL_ONE: ${BROKER_API_KEY && ANGEL_CLIENT_ID && ANGEL_PASSWORD && ANGEL_TOTP_SECRET ? '✅ found (all 4 keys)' : '❌ missing (need API_KEY + CLIENT_ID + PASSWORD + TOTP_SECRET)'}`);
 
 const prisma = new PrismaClient();
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
@@ -183,6 +189,21 @@ async function bootstrap() {
   }
 
   // ==========================================
+  // ==========================================
+  // 5. ANGEL ONE CONNECTOR (Broker — real MCX data)
+  // ==========================================
+  let angelOne: AngelOneConnector | null = null;
+  const angelReady = BROKER_API_KEY && ANGEL_CLIENT_ID && ANGEL_PASSWORD && ANGEL_TOTP_SECRET;
+  if (angelReady) {
+    angelOne = new AngelOneConnector(processTick, {
+      apiKey: BROKER_API_KEY!,
+      clientId: ANGEL_CLIENT_ID!,
+      password: ANGEL_PASSWORD!,
+      totpSecret: ANGEL_TOTP_SECRET!,
+    });
+  }
+
+  // ==========================================
   // START ALL CONNECTORS
   // ==========================================
   console.log('\n📡 Starting live data connectors...');
@@ -196,6 +217,7 @@ async function bootstrap() {
   if (twelveData) twelveData.start();
   if (alphaVantage) alphaVantage.start();
   if (newsConnector) newsConnector.start();
+  if (angelOne) await angelOne.start();
 
   console.log('\n✅ All connectors active. Worker is running in LIVE mode.\n');
   console.log('Active connectors:');
@@ -203,6 +225,7 @@ async function bootstrap() {
   console.log(`  • TwelveData (MCX):         ${TWELVE_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
   console.log(`  • AlphaVantage:             ${ALPHA_VANTAGE_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
   console.log(`  • NewsAPI:                  ${NEWS_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
+  console.log(`  • AngelOne (Broker MCX):    ${angelReady ? '✅ ACTIVE' : '❌ DISABLED'}`);
   console.log('');
 
   // Graceful Shutdown
@@ -212,6 +235,7 @@ async function bootstrap() {
     if (twelveData) twelveData.stop();
     if (alphaVantage) alphaVantage.stop();
     if (newsConnector) newsConnector.stop();
+    if (angelOne) angelOne.stop();
     if (dbWriteInterval) clearInterval(dbWriteInterval);
     redis.quit();
     await prisma.$disconnect();
