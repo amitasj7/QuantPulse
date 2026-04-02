@@ -123,3 +123,14 @@ for refrences - https://in.tradingview.com/chart/
 
 - watchlist + icon is not wroking 
 - serach box in not working.
+
+## update - 8
+- in upload image, you have to see 1, 2 and 3.
+- you have also create this type of dashboard that show all things.
+- you have to make it in working mode button, functionality etc.
+
+- Candles aren't showing (greeen and red candles). please check and fix them.
+- for options 3: you have to show timing in bottom right corner.
+
+- in bottom - left side, these is a date icon, when i click on this icon then image 2 show.
+  - you have to also implement this functionality to select custom date range.

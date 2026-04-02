@@ -129,3 +129,13 @@ curl "http://localhost:4000/forex/history?pair=USD_INR&limit=20"
 
 - implement all the features of angel one api in my project.
 - tell me what is need from my side?
+
+
+## update - 2:
+- the usd to inr conversion is not correct for current time.
+- when i google it - 1 United States Dollar equals
+92.90 Indian Rupee
+2 Apr, 5:35 pm UTC
+
+- so you have to also show date & timing. for which date & timing this conversion is correct.
+- when i hover on usd/inr box, a hover card should be appeear and show all details.
