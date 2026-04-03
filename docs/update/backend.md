@@ -139,3 +139,17 @@ curl "http://localhost:4000/forex/history?pair=USD_INR&limit=20"
 
 - so you have to also show date & timing. for which date & timing this conversion is correct.
 - when i hover on usd/inr box, a hover card should be appeear and show all details.
+
+
+## update - 3:
+you have to call api following way - so data should be actual and real time. it should be show on dashboard.
+🏛️ The Balanced Architecture: "The Gold Standard"
+
+Data Source,Provider,Frequency,Method,Storage
+Indian MCX (Gold/Silver),Angel One,Real-time (Ticks),WebSocket,Redis (Latest) + TimescaleDB (1m bars)
+Global Spot (XAU/USD),Twelve Data,Every 5 Minutes,REST API,TimescaleDB
+Forex (USD/INR),Twelve Data,Every 30 Minutes,REST API,Redis (Global Variable)
+Market News,NewsData.io,Every 2 Hours,REST API,Postgres
+
+## update - 4
+in upload image, i have marked 5 areas. so all of these button are not working so fix them.
