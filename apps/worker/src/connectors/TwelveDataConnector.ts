@@ -74,9 +74,9 @@ export class TwelveDataConnector {
   }
 
   start() {
-    console.log('[TwelveData] Starting real market data polling...');
+    console.log('[TwelveData] Starting global spot data polling (every 5 min)...');
     this.fetchAll();
-    this.timer = setInterval(() => this.fetchAll(), 60_000);
+    this.timer = setInterval(() => this.fetchAll(), 5 * 60_000);
   }
 
   stop() {

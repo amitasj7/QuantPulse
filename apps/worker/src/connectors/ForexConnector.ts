@@ -1,24 +1,30 @@
 import axios from 'axios';
+import Redis from 'ioredis';
 
 /**
- * Forex Connector
+ * Forex Connector (via Twelve Data)
  * 
- * Fetches the real USD/INR exchange rate from ExchangeRate-API.
- * Free tier: 1,500 requests/month.
+ * Fetches real USD/INR exchange rate from Twelve Data API.
+ * Stores the latest rate in Redis as a global variable for instant access.
+ * Also persists to TimescaleDB for historical tracking.
+ * 
  * Polls every 30 minutes.
  */
 
 export class ForexConnector {
   private timer: NodeJS.Timeout | null = null;
-  private apiKey: string;
+  private twelveApiKey: string;
   private currentRate: number = 83.5; // fallback default
+  private redis: Redis | null = null;
 
   constructor(
-    apiKey: string,
+    twelveApiKey: string,
     private onRateUpdate: (rate: number) => void,
     private onForexTick?: (pair: string, rate: number, timestamp: Date) => void,
+    redis?: Redis,
   ) {
-    this.apiKey = apiKey;
+    this.twelveApiKey = twelveApiKey;
+    this.redis = redis || null;
   }
 
   getRate(): number {
@@ -26,7 +32,7 @@ export class ForexConnector {
   }
 
   start() {
-    console.log('[ForexConnector] Starting USD/INR rate polling...');
+    console.log('[Forex] Starting USD/INR rate polling via Twelve Data (every 30 min)...');
     this.fetchRate();
     // Poll every 30 minutes
     this.timer = setInterval(() => this.fetchRate(), 30 * 60_000);
@@ -34,33 +40,49 @@ export class ForexConnector {
 
   stop() {
     if (this.timer) clearInterval(this.timer);
-    console.log('[ForexConnector] Stopped.');
+    console.log('[Forex] Stopped.');
   }
 
   private async fetchRate() {
     try {
-      const response = await axios.get(
-        `https://v6.exchangerate-api.com/v6/${this.apiKey}/latest/USD`,
-        { timeout: 10000 }
-      );
+      const response = await axios.get('https://api.twelvedata.com/price', {
+        params: {
+          symbol: 'USD/INR',
+          apikey: this.twelveApiKey,
+        },
+        timeout: 10000,
+      });
 
-      const inrRate = response.data?.conversion_rates?.INR;
+      const priceStr = response.data?.price;
+      const inrRate = priceStr ? parseFloat(priceStr) : NaN;
 
-      if (inrRate && !isNaN(inrRate)) {
+      if (!isNaN(inrRate) && inrRate > 0) {
         this.currentRate = inrRate;
         this.onRateUpdate(inrRate);
-        
-        // Also persist forex rate if callback provided
+
+        // Store in Redis as global variable for instant access
+        if (this.redis) {
+          const forexData = {
+            pair: 'USD_INR',
+            rate: inrRate,
+            timestamp: new Date().toISOString(),
+            source: 'TwelveData',
+          };
+          await this.redis.set('forex:USD_INR', JSON.stringify(forexData));
+          await this.redis.set('forex:USD_INR:rate', inrRate.toString());
+        }
+
+        // Persist to DB for history
         if (this.onForexTick) {
           this.onForexTick('USD_INR', inrRate, new Date());
         }
 
-        console.log(`[ForexConnector] USD/INR = ₹${inrRate.toFixed(2)}`);
+        console.log(`[Forex] USD/INR = ₹${inrRate.toFixed(2)} (via Twelve Data, stored in Redis)`);
       } else {
-        console.warn('[ForexConnector] Could not parse INR rate from response');
+        console.warn('[Forex] Could not parse INR rate from Twelve Data response');
       }
     } catch (err: any) {
-      console.error(`[ForexConnector] API error: ${err.message}`);
+      console.error(`[Forex] API error: ${err.message}`);
     }
   }
 }

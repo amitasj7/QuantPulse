@@ -4,17 +4,30 @@ import Redis from 'ioredis';
 import { TwelveDataConnector } from './connectors/TwelveDataConnector';
 import { AlphaVantageConnector } from './connectors/AlphaVantageConnector';
 import { ForexConnector } from './connectors/ForexConnector';
-import { NewsAPIConnector } from './connectors/NewsAPIConnector';
+import { NewsDataConnector } from './connectors/NewsDataConnector';
 import { AngelOneConnector } from './connectors/AngelOneConnector';
 import { DataNormalizer } from './normalizer/DataNormalizer';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env from monorepo root — try multiple paths for turbo/bun compatibility
+/**
+ * QuantPulse Data Worker — "Gold Standard" Architecture
+ * 
+ * ┌─────────────────────┬──────────────┬────────────┬───────────┬───────────────────────────┐
+ * │ Data Source          │ Provider     │ Frequency  │ Method    │ Storage                   │
+ * ├─────────────────────┼──────────────┼────────────┼───────────┼───────────────────────────┤
+ * │ Indian MCX          │ Angel One    │ Real-time  │ WebSocket │ Redis + TimescaleDB (1m)  │
+ * │ Global Spot (XAU)   │ Twelve Data  │ 5 minutes  │ REST      │ TimescaleDB               │
+ * │ Forex (USD/INR)     │ Twelve Data  │ 30 minutes │ REST      │ Redis (Global Var)        │
+ * │ Market News         │ NewsData.io  │ 2 hours    │ REST      │ Postgres                  │
+ * └─────────────────────┴──────────────┴────────────┴───────────┴───────────────────────────┘
+ */
+
+// Load .env from monorepo root
 const envPaths = [
-  path.join(__dirname, '../../../.env'),       // from src/ via ts-node-dev
-  path.join(process.cwd(), '../../.env'),      // from apps/worker via turbo
-  path.join(process.cwd(), '.env'),            // fallback: if CWD is root
+  path.join(__dirname, '../../../.env'),
+  path.join(process.cwd(), '../../.env'),
+  path.join(process.cwd(), '.env'),
 ];
 
 for (const envPath of envPaths) {
@@ -25,22 +38,23 @@ for (const envPath of envPaths) {
   }
 }
 
-// Validate required API keys
+// ==========================================
+// API Keys
+// ==========================================
 const TWELVE_API_KEY = process.env.TWELVE_API_KEY?.trim();
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY?.trim();
-const USD_INR_API_KEY = process.env.USD_INR_API_KEY?.trim();
-const NEWS_API_KEY = process.env.NEWS_API_KEY?.trim();
+const NEWS_API_KEY = process.env.NEWS_API_KEY?.trim(); // NewsData.io key
 const BROKER_API_KEY = process.env.BROKER_API_KEY?.trim();
 const ANGEL_CLIENT_ID = process.env.ANGEL_CLIENT_ID?.trim();
 const ANGEL_PASSWORD = process.env.ANGEL_PASSWORD?.trim();
 const ANGEL_TOTP_SECRET = process.env.ANGEL_TOTP_SECRET?.trim();
 
-// Debug: show which keys were found
-console.log(`🔑 TWELVE_API_KEY: ${TWELVE_API_KEY ? '✅ found' : '❌ missing'}`);
-console.log(`🔑 ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY ? '✅ found' : '❌ missing'}`);
-console.log(`🔑 USD_INR_API_KEY: ${USD_INR_API_KEY ? '✅ found' : '❌ missing'}`);
-console.log(`🔑 NEWS_API_KEY: ${NEWS_API_KEY ? '✅ found' : '❌ missing'}`);
-console.log(`🔑 ANGEL_ONE: ${BROKER_API_KEY && ANGEL_CLIENT_ID && ANGEL_PASSWORD && ANGEL_TOTP_SECRET ? '✅ found (all 4 keys)' : '❌ missing (need API_KEY + CLIENT_ID + PASSWORD + TOTP_SECRET)'}`);
+console.log('\n🔑 API Key Status:');
+console.log(`  TWELVE_API_KEY:  ${TWELVE_API_KEY ? '✅' : '❌'} (Global Spot + Forex)`);
+console.log(`  ALPHA_VANTAGE:   ${ALPHA_VANTAGE_API_KEY ? '✅' : '❌'} (Supplementary)`);
+console.log(`  NEWS_API_KEY:    ${NEWS_API_KEY ? '✅' : '❌'} (NewsData.io)`);
+const angelReady = !!(BROKER_API_KEY && ANGEL_CLIENT_ID && ANGEL_PASSWORD && ANGEL_TOTP_SECRET);
+console.log(`  ANGEL_ONE:       ${angelReady ? '✅' : '❌'} (MCX WebSocket)\n`);
 
 const prisma = new PrismaClient();
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
@@ -51,7 +65,7 @@ let dbWriteInterval: NodeJS.Timeout | null = null;
 const WRITE_INTERVAL_MS = 15000; // 15 seconds
 
 async function bootstrap() {
-  console.log('🚀 QuantPulse Data Worker initializing (LIVE MODE)...');
+  console.log('🚀 QuantPulse Data Worker — "Gold Standard" Mode\n');
   
   await prisma.$connect();
   console.log('✅ Connected to TimescaleDB');
@@ -71,7 +85,10 @@ async function bootstrap() {
     // 1. Push to Redis for real-time WebSocket broadcast
     redis.publish('market:ticks', JSON.stringify(tick));
 
-    // 2. Buffer for DB persistence
+    // 2. Also store latest tick in Redis for instant access
+    redis.set(`tick:${tick.assetId}`, JSON.stringify(tick));
+
+    // 3. Buffer for DB persistence
     tickBuffer.push(tick);
   };
 
@@ -110,7 +127,7 @@ async function bootstrap() {
   }, WRITE_INTERVAL_MS);
 
   // ==========================================
-  // 1. FOREX CONNECTOR (runs first to get USD/INR rate)
+  // 1. FOREX — Twelve Data (every 30 min → Redis)
   // ==========================================
   const forexPersist = async (pair: string, rate: number, timestamp: Date) => {
     try {
@@ -122,47 +139,46 @@ async function bootstrap() {
     }
   };
 
+  let twelveData: TwelveDataConnector | null = null;
+  let alphaVantage: AlphaVantageConnector | null = null;
+
   const forex = new ForexConnector(
-    USD_INR_API_KEY || '',
+    TWELVE_API_KEY || '',
     (rate) => {
-      // When rate updates, push it to other connectors
+      // Push forex rate to all connectors that need it
       if (twelveData) twelveData.setForexRate(rate);
       if (alphaVantage) alphaVantage.setForexRate(rate);
     },
     forexPersist,
+    redis, // Pass Redis for global variable storage
   );
 
   // ==========================================
-  // 2. TWELVE DATA CONNECTOR (MCX commodities)
+  // 2. GLOBAL SPOT — Twelve Data (every 5 min → TimescaleDB)
   // ==========================================
-  let twelveData: TwelveDataConnector | null = null;
   if (TWELVE_API_KEY) {
     twelveData = new TwelveDataConnector(processTick, TWELVE_API_KEY);
   }
 
   // ==========================================
-  // 3. ALPHA VANTAGE CONNECTOR (supplementary)
+  // 3. ALPHA VANTAGE — Supplementary (every 5 min)
   // ==========================================
-  let alphaVantage: AlphaVantageConnector | null = null;
   if (ALPHA_VANTAGE_API_KEY) {
     alphaVantage = new AlphaVantageConnector(processTick, ALPHA_VANTAGE_API_KEY);
   }
 
   // ==========================================
-  // 4. NEWS API CONNECTOR
+  // 4. NEWS — NewsData.io (every 2 hours → Postgres)
   // ==========================================
-  let newsConnector: NewsAPIConnector | null = null;
+  let newsConnector: NewsDataConnector | null = null;
   if (NEWS_API_KEY) {
-    newsConnector = new NewsAPIConnector(NEWS_API_KEY, async (articles) => {
-      // Persist each article to the CommodityNews table
+    newsConnector = new NewsDataConnector(NEWS_API_KEY, async (articles) => {
       for (const article of articles) {
         try {
-          // Find the matching commodity UUID if assetId was detected
           const commodityId = article.matchedAssetId
             ? assetIdMap.get(article.matchedAssetId) || null
             : null;
 
-          // Check if this article already exists by sourceUrl
           const existing = await prisma.commodityNews.findFirst({
             where: { sourceUrl: article.sourceUrl },
           });
@@ -189,11 +205,9 @@ async function bootstrap() {
   }
 
   // ==========================================
-  // ==========================================
-  // 5. ANGEL ONE CONNECTOR (Broker — real MCX data)
+  // 5. ANGEL ONE — MCX WebSocket (real-time → Redis + TimescaleDB)
   // ==========================================
   let angelOne: AngelOneConnector | null = null;
-  const angelReady = BROKER_API_KEY && ANGEL_CLIENT_ID && ANGEL_PASSWORD && ANGEL_TOTP_SECRET;
   if (angelReady) {
     angelOne = new AngelOneConnector(processTick, {
       apiKey: BROKER_API_KEY!,
@@ -206,27 +220,34 @@ async function bootstrap() {
   // ==========================================
   // START ALL CONNECTORS
   // ==========================================
-  console.log('\n📡 Starting live data connectors...');
-  
-  if (USD_INR_API_KEY) {
+  console.log('\n📡 Starting live data connectors...\n');
+
+  // Forex first (other connectors need the rate)
+  if (TWELVE_API_KEY) {
     forex.start();
-    // Wait a moment for forex rate before starting price connectors
     await new Promise(r => setTimeout(r, 3000));
   }
-  
+
+  // Global spot prices
   if (twelveData) twelveData.start();
   if (alphaVantage) alphaVantage.start();
+
+  // News
   if (newsConnector) newsConnector.start();
+
+  // MCX broker (Angel One WebSocket)
   if (angelOne) await angelOne.start();
 
-  console.log('\n✅ All connectors active. Worker is running in LIVE mode.\n');
-  console.log('Active connectors:');
-  console.log(`  • Forex (ExchangeRate-API): ${USD_INR_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
-  console.log(`  • TwelveData (MCX):         ${TWELVE_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
-  console.log(`  • AlphaVantage:             ${ALPHA_VANTAGE_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
-  console.log(`  • NewsAPI:                  ${NEWS_API_KEY ? '✅ ACTIVE' : '❌ DISABLED'}`);
-  console.log(`  • AngelOne (Broker MCX):    ${angelReady ? '✅ ACTIVE' : '❌ DISABLED'}`);
-  console.log('');
+  // Print final status table
+  console.log('\n' + '═'.repeat(60));
+  console.log('  QuantPulse Worker — Active Connectors');
+  console.log('═'.repeat(60));
+  console.log(`  MCX (Angel One):    ${angelReady ? '✅ WebSocket + REST' : '❌ DISABLED'}`);
+  console.log(`  Global Spot:        ${TWELVE_API_KEY ? '✅ Every 5 min' : '❌ DISABLED'}`);
+  console.log(`  Forex (USD/INR):    ${TWELVE_API_KEY ? '✅ Every 30 min → Redis' : '❌ DISABLED'}`);
+  console.log(`  Market News:        ${NEWS_API_KEY ? '✅ Every 2 hours' : '❌ DISABLED'}`);
+  console.log(`  Supplementary:      ${ALPHA_VANTAGE_API_KEY ? '✅ AlphaVantage' : '❌ DISABLED'}`);
+  console.log('═'.repeat(60) + '\n');
 
   // Graceful Shutdown
   const shutdown = async () => {
