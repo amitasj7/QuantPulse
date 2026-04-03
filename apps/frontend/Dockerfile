@@ -21,10 +21,13 @@ RUN pnpm --filter @quantpulse/frontend build
 # Production
 FROM node:20-alpine AS production
 WORKDIR /app
-COPY --from=base /app/apps/frontend/.next ./.next
-COPY --from=base /app/apps/frontend/public ./public
-COPY --from=base /app/apps/frontend/package.json ./
-COPY --from=base /app/node_modules ./node_modules
+
+ENV NODE_ENV production
+
+# Only copy the standalone output and public files
+COPY --from=base /app/apps/frontend/public ./apps/frontend/public
+COPY --from=base /app/apps/frontend/.next/standalone ./
+COPY --from=base /app/apps/frontend/.next/static ./apps/frontend/.next/static
 
 EXPOSE 3000
-CMD ["pnpm", "start"]
+CMD ["node", "apps/frontend/server.js"]
