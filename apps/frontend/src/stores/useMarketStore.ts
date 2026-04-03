@@ -33,7 +33,7 @@ interface MarketState {
   
   // Actions
   fetchInitialData: () => Promise<void>;
-  fetchHistory: (assetId: string) => Promise<void>;
+  fetchHistory: (assetId: string, interval?: string) => Promise<void>;
   fetchNews: (commodityId?: string) => Promise<void>;
   fetchForexRate: () => Promise<void>;
   updateLiveTick: (tick: NormalizedTick) => void;
@@ -97,9 +97,9 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  fetchHistory: async (assetId: string) => {
+  fetchHistory: async (assetId: string, interval?: string) => {
     try {
-      const history = await getPriceHistory(assetId, 100);
+      const history = await getPriceHistory(assetId, 200, interval);
       set((state) => ({
         historicalData: {
           ...state.historicalData,

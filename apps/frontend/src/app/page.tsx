@@ -96,10 +96,43 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   {forexRate && (
-                    <Badge variant="outline" className="bg-surface text-foreground border-border px-3 py-1 font-medium text-sm rounded-md">
-                      <DollarSign className="h-3.5 w-3.5 mr-1.5 text-text-secondary" />
-                      USD/INR: ₹{forexRate.rate.toFixed(2)}
-                    </Badge>
+                    <div className="relative group/forex">
+                      <Badge variant="outline" className="bg-surface text-foreground border-border px-3 py-1 font-medium text-sm rounded-md cursor-help transition-colors hover:border-text-secondary hover:bg-surface-hover">
+                        <DollarSign className="h-3.5 w-3.5 mr-1 text-text-secondary" />
+                        USD/INR: ₹{forexRate.rate.toFixed(2)}
+                      </Badge>
+                      
+                      {/* Hover Tooltip Card */}
+                      <div className="absolute top-full mt-2 lg:right-0 md:left-1/2 md:-translate-x-1/2 lg:translate-x-0 w-[240px] p-3 bg-surface border border-border shadow-2xl rounded-lg opacity-0 invisible group-hover/forex:opacity-100 group-hover/forex:visible transition-all duration-200 z-[100] scale-95 group-hover/forex:scale-100 backdrop-blur-md">
+                        <div className="flex items-center justify-between mb-2 pb-2 border-b border-border/60">
+                          <span className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                            <DollarSign className="h-4 w-4 text-text-secondary" /> FX Rate
+                          </span>
+                          <span className="text-[9px] bg-bullish/10 text-bullish border border-bullish/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Active</span>
+                        </div>
+                        <div className="flex flex-col gap-1.5 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="text-text-secondary font-medium">Currency Pair</span>
+                            <span className="font-mono text-foreground font-bold bg-background px-1.5 py-0.5 rounded border border-border">USD / INR</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-text-secondary font-medium">Conversion</span>
+                            <span className="font-mono text-foreground font-bold">1 USD = ₹{forexRate.rate.toFixed(3)}</span>
+                          </div>
+                          <div className="flex justify-between items-start mt-2 pt-2 border-t border-border/40">
+                            <span className="text-text-secondary font-medium mt-0.5">Last Synced</span>
+                            <div className="text-right flex flex-col items-end">
+                              <span className="text-foreground font-semibold">
+                                {new Date(forexRate.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                              <span className="text-text-secondary font-mono text-[10px] tracking-tight mt-0.5">
+                                {new Date(forexRate.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )}
                   <Badge variant="outline" className="bg-bullish/10 text-bullish border-bullish/20 px-3 py-1 font-medium text-sm rounded-md backdrop-blur-sm">
                     <div className="h-2 w-2 rounded-full bg-bullish mr-2 animate-pulse"></div>
@@ -184,7 +217,10 @@ export default function Dashboard() {
                     <TradingChart 
                       data={selectedHistory} 
                       liveTick={selectedLiveTick} 
-                      assetName={selectedMeta?.name || selectedAssetId} 
+                      assetName={selectedMeta?.name || selectedAssetId}
+                      onIntervalChange={(interval) => {
+                        useMarketStore.getState().fetchHistory(selectedAssetId, interval);
+                      }}
                     />
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 z-10 opacity-50">

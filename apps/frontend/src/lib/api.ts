@@ -27,9 +27,9 @@ export const getSolarMetrics = async () => {
   return data;
 };
 
-export const getPriceHistory = async (assetId: string, limit = 100): Promise<NormalizedTick[]> => {
+export const getPriceHistory = async (assetId: string, limit = 100, interval?: string): Promise<NormalizedTick[]> => {
   const { data } = await api.get(`/commodities/${assetId}/prices`, {
-    params: { limit },
+    params: { limit, ...(interval ? { interval } : {}) },
   });
   return data;
 };
