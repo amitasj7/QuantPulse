@@ -7,11 +7,11 @@ services:
   timescaledb:
     restart: always
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-quantpulse_prod}
 
   redis:
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-quantpulse_redis_prod}
 
   backend:
     build:
