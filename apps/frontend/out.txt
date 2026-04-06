@@ -1,0 +1,100 @@
+#14 51.47 
+#14 51.62 ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+#14 51.62 │                                                                              │
+#14 51.62 │   Ignored build scripts: @nestjs/core@11.1.17, @prisma/client@6.19.2,        │
+#14 51.62 │   @prisma/engines@6.19.2, msgpackr-extract@3.0.3, msw@2.12.14,               │
+#14 51.62 │   prisma@6.19.2, sharp@0.34.5, unrs-resolver@1.11.1.                         │
+#14 51.62 │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+#14 51.62 │   to run scripts.                                                            │
+#14 51.62 │                                                                              │
+#14 51.62 ╰──────────────────────────────────────────────────────────────────────────────╯
+#14 51.78 Done in 51.3s using pnpm v10.33.0
+#14 DONE 52.8s
+
+#15 [base 11/16] COPY apps/frontend/ ./apps/frontend/
+#15 DONE 1.7s
+
+#16 [base 12/16] COPY packages/shared/ ./packages/shared/
+#16 DONE 0.1s
+
+#17 [base 13/16] COPY tsconfig.base.json ./
+#17 DONE 0.1s
+
+#18 [base 14/16] RUN mkdir -p apps/frontend/node_modules/@quantpulse &&     ln -sfn ../../../../packages/shared apps/frontend/node_modules/@quantpulse/shared
+#18 DONE 0.5s
+
+#19 [base 15/16] RUN cd packages/shared && npm run build
+#19 1.219 
+#19 1.219 > @quantpulse/shared@1.0.0 build
+#19 1.219 > tsc
+#19 1.219 
+#19 2.187 npm notice
+#19 2.187 npm notice New major version of npm available! 10.8.2 -> 11.12.1
+#19 2.187 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.12.1
+#19 2.187 npm notice To update run: npm install -g npm@11.12.1
+#19 2.187 npm notice
+#19 DONE 2.3s
+
+#20 [base 16/16] RUN cd apps/frontend && npm run build
+#20 0.713 
+#20 0.713 > @quantpulse/frontend@1.0.0 build
+#20 0.713 > next build
+#20 0.713 
+#20 1.570 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#20 1.571 This information is used to shape Next.js' roadmap and prioritize features.
+#20 1.571 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#20 1.571 https://nextjs.org/telemetry
+#20 1.571 
+#20 1.606 ▲ Next.js 16.2.1 (Turbopack)
+#20 1.607 
+#20 1.790   Creating an optimized production build ...
+#20 18.97 ✓ Compiled successfully in 16.8s
+#20 19.02   Running TypeScript ...
+#20 34.32 Failed to type check.
+#20 34.32 
+#20 34.32 ./src/components/charts/TradingChart.tsx:8:32
+#20 34.32 Type error: Cannot find module '@quantpulse/shared' or its corresponding type declarations.
+#20 34.32 
+#20 34.32   [90m 6 |[0m   [33mCrosshairMode[0m, [33mLineStyle[0m
+#20 34.32   [90m 7 |[0m } [36mfrom[0m [32m'lightweight-charts'[0m;
+#20 34.32 [31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mNormalizedTick[0m } [36mfrom[0m [32m'@quantpulse/shared'[0m;
+#20 34.32   [90m   |[0m                                [31m[1m^[0m
+#20 34.32   [90m 9 |[0m [36mimport[0m { 
+#20 34.32   [90m10 |[0m   [33mSearch[0m, [33mPlus[0m, [33mBarChart2[0m, [33mActivity[0m, [33mBell[0m, [33mUndo2[0m, [33mRedo2[0m, [33mSave[0m, [33mCamera[0m,
+#20 34.32   [90m11 |[0m   [33mCrosshair[0m, [33mTrendingUp[0m, [33mType[0m, [33mRuler[0m, [33mZoomIn[0m, [33mMagnet[0m, [33mTrash2[0m, [33mSettings[0m, [33mPenTool[0m, [33mCalendarD...[0m
+#20 34.40 Next.js build worker exited with code: 1 and signal: null
+#20 34.49 npm error Lifecycle script `build` failed with error:
+#20 34.50 npm error code 1
+#20 34.50 npm error path /app/apps/frontend
+#20 34.50 npm error workspace @quantpulse/frontend@1.0.0
+#20 34.50 npm error location /app/apps/frontend
+#20 34.50 npm error command failed
+#20 34.50 npm error command sh -c next build
+#20 ERROR: process "/bin/sh -c cd apps/frontend && npm run build" did not complete successfully: exit code: 1
+------
+ > [base 16/16] RUN cd apps/frontend && npm run build:
+34.32   [90m10 |[0m   [33mSearch[0m, [33mPlus[0m, [33mBarChart2[0m, [33mActivity[0m, [33mBell[0m, [33mUndo2[0m, [33mRedo2[0m, [33mSave[0m, [33mCamera[0m,
+34.32   [90m11 |[0m   [33mCrosshair[0m, [33mTrendingUp[0m, [33mType[0m, [33mRuler[0m, [33mZoomIn[0m, [33mMagnet[0m, [33mTrash2[0m, [33mSettings[0m, [33mPenTool[0m, [33mCalendarD...[0m
+34.40 Next.js build worker exited with code: 1 and signal: null
+34.49 npm error Lifecycle script `build` failed with error:
+34.50 npm error code 1
+34.50 npm error path /app/apps/frontend
+34.50 npm error workspace @quantpulse/frontend@1.0.0
+34.50 npm error location /app/apps/frontend
+34.50 npm error command failed
+34.50 npm error command sh -c next build
+------
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 36)
+Dockerfile:30
+--------------------
+  28 |     
+  29 |     # Build the frontend
+  30 | >>> RUN cd apps/frontend && npm run build
+  31 |     
+  32 |     # Production
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c cd apps/frontend && npm run build" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/tj9nzhyiprewdm09f4nn8yyvf
