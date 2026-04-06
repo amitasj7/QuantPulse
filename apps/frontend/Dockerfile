@@ -4,6 +4,9 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Ensure devDependencies are installed during build
+ENV NODE_ENV=development
+
 # Copy ALL workspace package.json files for full install
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/worker/package.json ./apps/worker/
