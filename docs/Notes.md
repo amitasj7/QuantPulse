@@ -90,3 +90,5 @@ solar prices companies
 ## limited time period - 
 domain name - ramversingh.com : limit 1 year
 
+connect with EC2 instances - 
+ssh -i "C:\Users\amits\Desktop\Ramver\Important\quantpulse-key.pem" ec2-user@18.232.35.238
