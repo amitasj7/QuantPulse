@@ -4,19 +4,30 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy workspace root
+# Copy ALL workspace package.json files for full install
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/worker/package.json ./apps/worker/
+COPY apps/backend/package.json ./apps/backend/
 COPY apps/frontend/package.json ./apps/frontend/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/database/package.json ./packages/database/
 
-RUN pnpm install --frozen-lockfile --filter @quantpulse/frontend...
+# Install ALL workspace dependencies (ensures workspace symlinks are correct)
+RUN pnpm install --frozen-lockfile
 
 COPY apps/frontend/ ./apps/frontend/
 COPY packages/shared/ ./packages/shared/
 COPY tsconfig.base.json ./
 
-# Build
-RUN pnpm --filter @quantpulse/frontend build
+# Manually create workspace symlinks directly in the app folder
+RUN mkdir -p apps/frontend/node_modules/@quantpulse && \
+    ln -sfn ../../../../packages/shared apps/frontend/node_modules/@quantpulse/shared
+
+# Build dependency packages first
+RUN cd packages/shared && npm run build
+
+# Build the frontend
+RUN cd apps/frontend && npm run build
 
 # Production
 FROM node:20-alpine AS production
