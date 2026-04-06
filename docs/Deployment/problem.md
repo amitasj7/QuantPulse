@@ -367,3 +367,19 @@ Cached:    0 cached, 5 total
 Failed:    @quantpulse/worker#build
 
  ERROR  run failed: command  exited (2)
+
+
+
+update - 
+🐳 Step 3: Map Certificates to Docker
+Now you must tell your Nginx container where to find these keys on your EC2 "Host."
+
+Update your infra/docker/docker-compose.prod.yml:
+
+YAML
+services:
+  gateway:
+    # ... other config ...
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro # Mount the certs as Read-Only
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
