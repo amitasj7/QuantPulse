@@ -383,3 +383,76 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro # Mount the certs as Read-Only
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+
+Error - 6
+41.1 Progress: resolved 1058, reused 0, downloaded 741, added 251
+141.5  WARN  GET https://registry.npmjs.org/tldts/-/tldts-7.0.27.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.5  WARN  GET https://registry.npmjs.org/type-fest/-/type-fest-5.5.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.5  WARN  GET https://registry.npmjs.org/tagged-tag/-/tagged-tag-1.0.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.5  WARN  GET https://registry.npmjs.org/until-async/-/until-async-3.0.2.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/fetch-blob/-/fetch-blob-3.2.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/node-domexception/-/node-domexception-1.0.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/node-fetch/-/node-fetch-3.3.2.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/web-streams-polyfill/-/web-streams-polyfill-3.3.3.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/formdata-polyfill/-/formdata-polyfill-4.0.10.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/open/-/open-11.0.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.6  WARN  GET https://registry.npmjs.org/default-browser/-/default-browser-5.5.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.7  WARN  GET https://registry.npmjs.org/bundle-name/-/bundle-name-4.1.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.7  WARN  GET https://registry.npmjs.org/default-browser-id/-/default-browser-id-5.0.1.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.7  WARN  GET https://registry.npmjs.org/run-applescript/-/run-applescript-7.1.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.7  WARN  GET https://registry.npmjs.org/define-lazy-prop/-/define-lazy-prop-3.0.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+141.7  WARN  GET https://registry.npmjs.org/is-in-ssh/-/is-in-ssh-1.0.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+142.1 Progress: resolved 1058, reused 0, downloaded 746, added 251
+143.7  ERR_PNPM_ENOSPC  [importPackage /app/node_modules/.pnpm/tapable@2.3.2/node_modules/tapable] ENOSPC: no space left on device, mkdir '/app/node_modules/.pnpm/tapable@2.3.2/node_modules/tapable_tmp_1_1'
+------
+[+] up 0/3
+ ⠙ Image docker-frontend Building                                150.1s
+ ⠙ Image docker-backend  Building                                150.1s
+ ⠙ Image docker-worker   Building                                150.1s
+Dockerfile:19
+
+--------------------
+
+  17 |
+
+  18 |     # Install ALL workspace dependencies (ensures workspace symlinks are correct)
+
+  19 | >>> RUN pnpm install --frozen-lockfile
+
+  20 |
+
+  21 |     COPY apps/backend/ ./apps/backend/
+
+--------------------
+
+target backend: failed to solve: process "/bin/sh -c pnpm install --frozen-lockfile" did not complete successfully: exit code: 1
+
+[ec2-user@ip-172-31-79-156 QuantPulse]$
+
+
+
+Before - 
+# 1. Create the plugins directory
+mkdir -p ~/.docker/cli-plugins
+
+# 2. Download the latest Docker Compose binary
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+
+# 3. Make the plugin executable
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+
+after -- 
+# 1. Create the plugins directory if it doesn't exist
+mkdir -p ~/.docker/cli-plugins
+
+# 2. Download the Buildx binary
+curl -SL https://github.com/docker/buildx/releases/latest/download/buildx-v0.17.1.linux-amd64 -o ~/.docker/cli-plugins/docker-buildx
+
+# 3. Make it executable
+chmod +x ~/.docker/cli-plugins/docker-buildx
+
+# 4. Verify the installation
+docker buildx version
