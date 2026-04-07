@@ -456,3 +456,167 @@ chmod +x ~/.docker/cli-plugins/docker-buildx
 
 # 4. Verify the installation
 docker buildx version
+
+
+-----
+ > [frontend base 16/16] RUN cd apps/frontend && npm run build:
+0.972
+0.972 > @quantpulse/frontend@1.0.0 build
+0.972 > next build
+0.972
+1.331 ⚠ You are using a non-standard "NODE_ENV" value in your environment. This creates inconsistencies in the project and is strongly advised against. Read more: https://nextjs.org/docs/messages/non-standard-node-env
+2.591 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2.591 This information is used to shape Next.js' roadmap and prioritize features.
+2.591 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+2.592 https://nextjs.org/telemetry
+2.592
+2.643 ▲ Next.js 16.2.1 (Turbopack)
+2.643
+2.896   Creating an optimized production build ...
+19.23 ✓ Compiled successfully in 14.9s
+19.35   Running TypeScript ...
+32.00   Finished TypeScript in 12.6s ...
+32.01   Collecting page data using 10 workers ...
+33.89   Generating static pages using 10 workers (0/9) ...
+35.03 Each child in a list should have a unique "key" prop.
+35.03
+35.03 Check the top-level render call using <__next_viewport_boundary__>. See https://react.dev/link/warning-keys for more information.
+35.05 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+35.38 Each child in a list should have a unique "key" prop.
+35.38
+35.38 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+35.38 Each child in a list should have a unique "key" prop.
+35.38
+35.38 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+35.44 Each child in a list should have a unique "key" prop.
+35.44
+35.44 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+35.44 Each child in a list should have a unique "key" prop.
+35.44
+35.44 Check the top-level render call using <html>. See https://react.dev/link/warning-keys for more information.
+35.44 Each child in a list should have a unique "key" prop.
+35.44
+35.44 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+35.52 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+35.55 Each child in a list should have a unique "key" prop.
+35.55
+35.55 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+35.55 Each child in a list should have a unique "key" prop.
+35.55
+35.55 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.11 Each child in a list should have a unique "key" prop.
+36.11
+36.11 Check the top-level render call using <__next_viewport_boundary__>. See https://react.dev/link/warning-keys for more information.
+36.11 Each child in a list should have a unique "key" prop.
+36.11
+36.11 Check the top-level render call using <html>. See https://react.dev/link/warning-keys for more information.
+36.11 Each child in a list should have a unique "key" prop.
+36.11
+36.11 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.12 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+36.16 Each child in a list should have a unique "key" prop.
+36.16
+36.16 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+36.16 Each child in a list should have a unique "key" prop.
+36.16
+36.16 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.23 Each child in a list should have a unique "key" prop.
+36.23
+36.23 Check the top-level render call using <__next_viewport_boundary__>. See https://react.dev/link/warning-keys for more information.
+36.23 Each child in a list should have a unique "key" prop.
+36.23
+36.23 Check the top-level render call using <html>. See https://react.dev/link/warning-keys for more information.
+36.23 Each child in a list should have a unique "key" prop.
+36.23
+36.23 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.23 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+36.25 Each child in a list should have a unique "key" prop.
+36.25
+36.25 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+36.25 Each child in a list should have a unique "key" prop.
+36.25
+36.25 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.30 Each child in a list should have a unique "key" prop.
+36.30
+36.30 Check the top-level render call using <__next_viewport_boundary__>. See https://react.dev/link/warning-keys for more information.
+36.30 Each child in a list should have a unique "key" prop.
+36.30
+36.30 Check the top-level render call using <html>. See https://react.dev/link/warning-keys for more information.
+36.30 Each child in a list should have a unique "key" prop.
+36.30
+36.30 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.30 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+36.31 Each child in a list should have a unique "key" prop.
+36.31
+36.31 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+36.32 Each child in a list should have a unique "key" prop.
+36.32
+36.32 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.39 Each child in a list should have a unique "key" prop.
+36.39
+36.39 Check the top-level render call using <__next_viewport_boundary__>. See https://react.dev/link/warning-keys for more information.
+36.39 Each child in a list should have a unique "key" prop.
+36.39
+36.39 Check the top-level render call using <html>. See https://react.dev/link/warning-keys for more information.
+36.39 Each child in a list should have a unique "key" prop.
+36.39
+36.39 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.39 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+36.40 Each child in a list should have a unique "key" prop.
+36.40
+36.40 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+36.40 Each child in a list should have a unique "key" prop.
+36.40
+36.40 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.47 Each child in a list should have a unique "key" prop.
+36.47
+36.47 Check the top-level render call using <__next_viewport_boundary__>. See https://react.dev/link/warning-keys for more information.
+36.47 Each child in a list should have a unique "key" prop.
+36.47
+36.47 Check the top-level render call using <html>. See https://react.dev/link/warning-keys for more information.
+36.47 Each child in a list should have a unique "key" prop.
+36.47
+36.47 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.48 Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.
+36.49 Each child in a list should have a unique "key" prop.
+36.49
+36.49 Check the top-level render call using <meta>. See https://react.dev/link/warning-keys for more information.
+36.49 Each child in a list should have a unique "key" prop.
+36.49
+36.49 Check the top-level render call using <head>. See https://react.dev/link/warning-keys for more information.
+36.52 Error occurred prerendering page "/_global-error". Read more: https://nextjs.org/docs/messages/prerender-error
+36.54 TypeError: Cannot read properties of null (reading 'useContext')
+36.54     at <unknown> (.next/server/chunks/ssr/04sg_next_dist_0o_30jg._.js:4:28833) {
+36.54   digest: '2761005474'
+36.54 }
+36.55 Export encountered an error on /_global-error/page: /_global-error, exiting the build.
+36.61 ⨯ Next.js build worker exited with code: 1 and signal: null
+36.71 npm error Lifecycle script `build` failed with error:
+36.73 npm error code 1
+36.73 npm error path /app/apps/frontend
+36.73 npm error workspace @quantpulse/frontend@1.0.0
+36.73 npm error location /app/apps/frontend
+36.73 npm error command failed
+36.73 npm error command sh -c next build
+------
+Dockerfile:33
+
+--------------------
+
+  31 |
+
+  32 |     # Build the frontend
+
+  33 | >>> RUN cd apps/frontend && npm run build
+
+  34 |
+
+  35 |     # Production
+
+--------------------
+
+target frontend: failed to solve: process "/bin/sh -c cd apps/frontend && npm run build" did not complete successfully: exit code: 1
+
+
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/p8inmwlt07t0rmqgbuym3zwzq
