@@ -36,6 +36,9 @@ RUN cd packages/shared && npm run build
 RUN cd packages/database && npm run build
 RUN cd apps/backend && npm run build
 
+# Create a flat, dereferenced node_modules (pnpm symlinks break in Docker COPY)
+RUN cp -rL node_modules /tmp/prod_node_modules
+
 # Production — only ship compiled JS
 FROM node:20-alpine AS production
 WORKDIR /app
@@ -45,11 +48,11 @@ ENV NODE_ENV=production
 COPY --from=base /app/apps/backend/dist ./dist
 COPY --from=base /app/apps/backend/package.json ./
 COPY --from=base /app/packages/database/prisma ./prisma
-COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /tmp/prod_node_modules ./node_modules
 COPY --from=base /app/packages/shared/dist ./node_modules/@quantpulse/shared/dist
 COPY --from=base /app/packages/shared/package.json ./node_modules/@quantpulse/shared/package.json
 COPY --from=base /app/packages/database/dist ./node_modules/@quantpulse/database/dist
 COPY --from=base /app/packages/database/package.json ./node_modules/@quantpulse/database/package.json
 
 EXPOSE 4000
-CMD ./node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma && node dist/main.js
+CMD npx prisma@6 migrate deploy --schema=./prisma/schema.prisma && node dist/main.js

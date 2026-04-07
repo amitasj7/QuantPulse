@@ -37,12 +37,10 @@ RUN cd packages/database && npx prisma generate
 RUN cd packages/shared && npm run build
 RUN cd packages/database && npm run build
 
-# Debug symlinks and package content
-RUN ls -la apps/worker/node_modules/@quantpulse/shared/ || echo "SYMLINK IS DEAD"
-RUN cat apps/worker/node_modules/@quantpulse/shared/package.json || echo "NO PACKAGE JSON"
-RUN ls -la packages/shared/dist/ || echo "SHARED NOT BUILT"
-
 RUN cd apps/worker && npm run build
+
+# Create a flat, dereferenced node_modules (pnpm symlinks break in Docker COPY)
+RUN cp -rL node_modules /tmp/prod_node_modules
 
 # Production stage — only ship compiled JS
 FROM node:20-alpine AS production
@@ -52,7 +50,7 @@ ENV NODE_ENV=production
 
 COPY --from=base /app/apps/worker/dist ./dist
 COPY --from=base /app/apps/worker/package.json ./
-COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /tmp/prod_node_modules ./node_modules
 COPY --from=base /app/packages/shared/dist ./node_modules/@quantpulse/shared/dist
 COPY --from=base /app/packages/shared/package.json ./node_modules/@quantpulse/shared/package.json
 COPY --from=base /app/packages/database/dist ./node_modules/@quantpulse/database/dist
