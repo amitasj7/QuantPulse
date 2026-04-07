@@ -53,5 +53,9 @@ ENV NODE_ENV=production
 COPY --from=base /app/apps/worker/dist ./dist
 COPY --from=base /app/apps/worker/package.json ./
 COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/packages/shared/dist ./node_modules/@quantpulse/shared/dist
+COPY --from=base /app/packages/shared/package.json ./node_modules/@quantpulse/shared/package.json
+COPY --from=base /app/packages/database/dist ./node_modules/@quantpulse/database/dist
+COPY --from=base /app/packages/database/package.json ./node_modules/@quantpulse/database/package.json
 
 CMD ["node", "dist/index.js"]
