@@ -45,4 +45,4 @@ ENV NODE_ENV=production
 COPY --from=base /app /app
 
 EXPOSE 4000
-CMD npx prisma@6 migrate deploy --schema=./packages/database/prisma/schema.prisma && node apps/backend/dist/main.js
+CMD node apps/backend/dist/main.js
