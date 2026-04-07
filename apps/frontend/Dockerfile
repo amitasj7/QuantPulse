@@ -29,8 +29,8 @@ RUN mkdir -p apps/frontend/node_modules/@quantpulse && \
 # Build dependency packages first
 RUN cd packages/shared && npm run build
 
-# Build the frontend
-RUN cd apps/frontend && npm run build
+# Build the frontend (NODE_ENV must be 'production' for Next.js prerender)
+RUN cd apps/frontend && NODE_ENV=production npm run build
 
 # Production
 FROM node:20-alpine AS production
