@@ -147,8 +147,40 @@ then if i select silver in chart then news will show related to silver.
   - first: stock name like silver, gold etc.
   - second: positive, negative or neutral.
 
-## update - 10
-I want a admin panel login with email/mobile no and password.
-- admin can be add/remove other stocks.
-- in dashboard page, upper right corner admin profile icon with image should be visible.
-- admin can change his profile.
+
+## update - 
+Request failed with status code 404
+src/lib/api.ts (26:20) @ async getSolarMetrics
+
+
+  24 |
+  25 | export const getSolarMetrics = async () => {
+> 26 |   const { data } = await api.get('/solar/supply-chain');
+     |                    ^
+  27 |   return data;
+  28 | };
+  29 |
+Call Stack
+5
+
+Show 3 ignore-listed frame(s)
+async getSolarMetrics
+src/lib/api.ts (26:20)
+
+Request failed with status code 404
+src/lib/api.ts (31:20) @ async getPriceHistory
+
+
+  29 |
+  30 | export const getPriceHistory = async (assetId: string, limit = 100, interval?: string): Pr...
+> 31 |   const { data } = await api.get(`/commodities/${assetId}/prices`, {
+     |                    ^
+  32 |     params: { limit, ...(interval ? { interval } : {}) },
+  33 |   });
+  34 |   return data;
+Call Stack
+5
+
+Show 3 ignore-listed frame(s)
+async getPriceHistory
+src/lib/api.ts (31:20)
