@@ -204,10 +204,10 @@ async function bootstrap() {
     });
   }
 
-  // ==========================================
-  // 5. ANGEL ONE — MCX WebSocket (real-time → Redis + TimescaleDB)
-  // ==========================================
   let angelOne: AngelOneConnector | null = null;
+  // Currently disabling Angel One websocket because it maps to incorrect mini/petal contracts
+  // resulting in bad prices. TwelveData acts as our reliable "Gold Standard".
+  /*
   if (angelReady) {
     angelOne = new AngelOneConnector(processTick, {
       apiKey: BROKER_API_KEY!,
@@ -216,6 +216,7 @@ async function bootstrap() {
       totpSecret: ANGEL_TOTP_SECRET!,
     });
   }
+  */
 
   // ==========================================
   // START ALL CONNECTORS
@@ -235,8 +236,8 @@ async function bootstrap() {
   // News
   if (newsConnector) newsConnector.start();
 
-  // MCX broker (Angel One WebSocket)
-  if (angelOne) await angelOne.start();
+  // MCX broker (Angel One WebSocket) - Currently disabled
+  // if (angelOne) await angelOne.start();
 
   // Print final status table
   console.log('\n' + '═'.repeat(60));
@@ -256,7 +257,7 @@ async function bootstrap() {
     if (twelveData) twelveData.stop();
     if (alphaVantage) alphaVantage.stop();
     if (newsConnector) newsConnector.stop();
-    if (angelOne) angelOne.stop();
+    // if (angelOne) angelOne.stop();
     if (dbWriteInterval) clearInterval(dbWriteInterval);
     redis.quit();
     await prisma.$disconnect();

@@ -41,22 +41,26 @@ export function WatchlistPanel() {
   return (
     <div className="h-full flex flex-col bg-surface border-l border-border overflow-hidden">
       {/* Watchlist Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-        <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
-          <Star className="h-4 w-4 text-bullish" />
+      <div className="flex items-center justify-between px-3 py-3 border-b border-border shrink-0">
+        <button className="font-bold text-sm text-foreground flex items-center gap-1 hover:bg-surface-hover px-1.5 py-0.5 rounded transition-colors">
           Watchlist
-        </h3>
-        <button 
-          onClick={() => setSearchOpen(true)}
-          className="text-text-secondary hover:text-foreground transition-colors hover:bg-background/50 p-1 rounded-md" 
-          title="Add symbol"
-        >
-          <Plus className="h-4 w-4" />
+          <ChevronDown className="h-3.5 w-3.5 text-text-secondary" />
         </button>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setSearchOpen(true)} className="text-text-secondary hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-surface-hover" title="Add symbol">
+            <Plus className="h-4 w-4" />
+          </button>
+          <button className="text-text-secondary hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-surface-hover">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="12" height="10" rx="2"/><path d="M7 4v10M11 4v10"/></svg>
+          </button>
+          <button className="text-text-secondary hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-surface-hover">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="4.5" cy="9" r="1"/><circle cx="9" cy="9" r="1"/><circle cx="13.5" cy="9" r="1"/></svg>
+          </button>
+        </div>
       </div>
 
       {/* Column Header */}
-      <div className="grid grid-cols-[16fr_12fr_9fr_11fr] gap-1 px-4 py-2 text-[10px] uppercase tracking-wider text-text-secondary font-semibold border-b border-border/50 shrink-0">
+      <div className="grid grid-cols-[14fr_10fr_8fr_9fr] gap-1 px-4 py-1.5 text-[11px] text-text-secondary border-b border-border/50 shrink-0">
         <span>Symbol</span>
         <span className="text-right">Last</span>
         <span className="text-right">Chg</span>
@@ -74,14 +78,13 @@ export function WatchlistPanel() {
               {/* Category Header */}
               <button
                 onClick={() => toggleCategory(cat.key)}
-                className="flex items-center gap-1.5 w-full px-4 py-2 text-xs font-bold text-text-secondary hover:text-foreground hover:bg-background/50 transition-colors uppercase tracking-wider"
+                className="flex items-center gap-1.5 w-full px-4 py-2 text-[11px] text-text-secondary hover:text-foreground hover:bg-background/50 transition-colors uppercase"
               >
                 {cat.isOpen 
-                  ? <ChevronDown className="h-3 w-3" /> 
-                  : <ChevronRight className="h-3 w-3" />
+                  ? <ChevronDown className="h-3.5 w-3.5" /> 
+                  : <ChevronRight className="h-3.5 w-3.5" />
                 }
                 {cat.label}
-                <span className="ml-auto text-[10px] text-text-secondary/60 font-normal">{assets.length}</span>
               </button>
 
               {/* Asset Rows */}
@@ -107,35 +110,40 @@ export function WatchlistPanel() {
                   <button
                     key={asset.assetId}
                     onClick={() => setSelectedAssetId(asset.assetId)}
-                    className={`grid grid-cols-[16fr_12fr_9fr_11fr] gap-1 w-full px-4 py-2 text-xs transition-colors ${
+                    className={`grid grid-cols-[14fr_10fr_8fr_9fr] items-center gap-1 w-full px-4 py-1 text-xs transition-colors ${
                       isSelected 
-                        ? 'bg-bullish/10 border-l-2 border-bullish' 
-                        : 'hover:bg-background/50 border-l-2 border-transparent'
-                    }`}
+                        ? 'bg-surface-hover border-border' 
+                        : 'hover:bg-background/50 border-transparent'
+                    } border-t border-b border-transparent hover:border-border`}
                     draggable
                     onDragStart={(e) => {
                       e.dataTransfer.setData("text/plain", asset.assetId);
                       e.dataTransfer.effectAllowed = "copy";
                     }}
                   >
-                    {/* Symbol & name */}
-                    <div className="text-left min-w-0 pr-1">
-                      <div className="font-bold text-foreground truncate">{asset.symbol}</div>
-                      <div className="text-[10px] text-text-secondary truncate">{asset.name}</div>
+                    {/* Symbol & Logo */}
+                    <div className="flex items-center gap-2 text-left min-w-0 pr-1">
+                      <div className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[8px] font-bold ${isSelected ? 'bg-blue-600 text-white' : 'bg-foreground text-background'}`}>
+                        {asset.symbol.substring(0, 2)}
+                      </div>
+                      <div className="flex items-baseline gap-1 truncate">
+                        <span className="font-bold text-foreground text-[12px]">{asset.symbol}</span>
+                        <span className="text-[10px] text-text-secondary/70 font-black">•</span>
+                      </div>
                     </div>
 
                     {/* Last price */}
-                    <div className={`text-right font-mono font-medium ${isUp ? 'text-foreground' : 'text-foreground'}`}>
+                    <div className="text-right text-[12px] font-medium text-foreground">
                       {formattedPrice}
                     </div>
 
                     {/* Change */}
-                    <div className={`text-right font-mono text-[11px] ${isUp ? 'text-bullish' : 'text-bearish'}`}>
+                    <div className={`text-right text-[12px] ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
                       {change !== 0 ? (change > 0 ? '+' : '') + change.toFixed(1) : '—'}
                     </div>
 
                     {/* Change % */}
-                    <div className={`text-right font-mono text-[11px] font-semibold ${isUp ? 'text-bullish' : 'text-bearish'}`}>
+                    <div className={`text-right text-[12px] font-medium tracking-tight ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
                       {changePercent !== 0 ? (changePercent > 0 ? '+' : '') + changePercent.toFixed(2) + '%' : '—'}
                     </div>
                   </button>

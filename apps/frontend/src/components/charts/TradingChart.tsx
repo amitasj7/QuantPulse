@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { 
-  createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, LineSeries, ColorType,
+  createChart, IChartApi, ISeriesApi, Time, CandlestickSeries, HistogramSeries, LineSeries, AreaSeries, ColorType,
   CrosshairMode, LineStyle
 } from 'lightweight-charts';
 import { NormalizedTick } from '@quantpulse/shared';
@@ -48,7 +48,7 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
   const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
   const [activeInterval, setActiveInterval] = useState('1d');
   const [activeRange, setActiveRange] = useState('1M');
-  const [chartType, setChartType] = useState<'candle' | 'line'>('candle');
+  const [chartType, setChartType] = useState<'candle' | 'line' | 'area'>('area');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [customDateValue, setCustomDateValue] = useState("");
   
@@ -101,6 +101,9 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
 
   useEffect(() => { formatOHLC(); }, [formatOHLC]);
 
+  const dataTracker = useRef({ asset: '', interval: '', length: 0, firstTs: 0 });
+
+  // 1. Core Chart Initialization (Runs Once)
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -109,131 +112,154 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.06)';
 
     const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor,
-      },
-      grid: {
-        vertLines: { color: gridColor },
-        horzLines: { color: gridColor },
-      },
+      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor },
+      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: { width: 1, color: '#0ECB81', style: LineStyle.Dashed, labelBackgroundColor: '#0ECB81' },
         horzLine: { width: 1, color: '#0ECB81', style: LineStyle.Dashed, labelBackgroundColor: '#0ECB81' },
       },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-        borderVisible: false,
-        borderColor: isDark ? '#1E293B' : '#E2E8F0',
-      },
-      rightPriceScale: {
-        borderVisible: false,
-        borderColor: isDark ? '#1E293B' : '#E2E8F0',
-        mode: priceScaleMode === 'log' ? 1 : (priceScaleMode === 'percent' ? 2 : 0),
-        autoScale: autoScale,
-      },
+      timeScale: { timeVisible: true, secondsVisible: false, borderVisible: false, borderColor: isDark ? '#1E293B' : '#E2E8F0' },
+      rightPriceScale: { borderVisible: false, borderColor: isDark ? '#1E293B' : '#E2E8F0' },
       autoSize: true,
     });
 
     chartRef.current = chart;
 
-    let mainSeries: ISeriesApi<"Candlestick" | "Line">;
+    const handleResize = () => {
+      if (chartContainerRef.current) chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+      chartRef.current = null;
+    };
+  }, []);
+
+  // 2. Dynamic Chart Options Applying
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.applyOptions({
+      rightPriceScale: {
+        mode: priceScaleMode === 'log' ? 1 : (priceScaleMode === 'percent' ? 2 : 0),
+        autoScale: autoScale,
+      }
+    });
+  }, [priceScaleMode, autoScale]);
+
+  // 3. Series Management (Recreate when chartType changes)
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    if (mainSeriesRef.current) {
+        chartRef.current.removeSeries(mainSeriesRef.current);
+        mainSeriesRef.current = null;
+    }
+    if (volumeSeriesRef.current) {
+        chartRef.current.removeSeries(volumeSeriesRef.current);
+        volumeSeriesRef.current = null;
+    }
+
+    let mainSeries: ISeriesApi<"Candlestick" | "Line" | "Area">;
+
+    let isDown = false;
+    if (data && data.length > 0) {
+      const fd = data.find(d => Number(d.close) > 0);
+      const ld = [...data].reverse().find(d => Number(d.close) > 0);
+      if (fd && ld) isDown = Number(ld.close) < Number(fd.close);
+    }
 
     if (chartType === 'candle') {
-      mainSeries = chart.addSeries(CandlestickSeries, {
-        upColor: '#10B981',
-        downColor: '#F43F5E',
-        borderVisible: false,
-        wickUpColor: '#10B981',
-        wickDownColor: '#F43F5E',
+      mainSeries = chartRef.current.addSeries(CandlestickSeries, {
+        upColor: '#089981', downColor: '#F23645', borderVisible: true,
+        wickUpColor: '#089981', wickDownColor: '#F23645', borderUpColor: '#089981', borderDownColor: '#F23645',
+      }) as any;
+    } else if (chartType === 'line') {
+      mainSeries = chartRef.current.addSeries(LineSeries, {
+        color: '#2962FF', lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 4,
       }) as any;
     } else {
-      mainSeries = chart.addSeries(LineSeries, {
-        color: '#2962FF',
-        lineWidth: 2,
-        crosshairMarkerVisible: true,
-        crosshairMarkerRadius: 4,
+      mainSeries = chartRef.current.addSeries(AreaSeries, {
+        lineColor: isDown ? '#ea4335' : '#34a853',
+        topColor: isDown ? 'rgba(234, 67, 53, 0.4)' : 'rgba(52, 168, 83, 0.4)',
+        bottomColor: isDown ? 'rgba(234, 67, 53, 0.0)' : 'rgba(52, 168, 83, 0.0)',
+        lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 4,
       }) as any;
     }
-    
     mainSeriesRef.current = mainSeries;
 
-    // Volume histogram series
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
-      priceScaleId: 'volume',
+    const volumeSeries = chartRef.current.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' }, priceScaleId: 'volume', // Using explicit volume scale
     });
-    chart.priceScale('volume').applyOptions({
-      scaleMargins: { top: 0.85, bottom: 0 },
-    });
+    chartRef.current.priceScale('volume').applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
     volumeSeriesRef.current = volumeSeries;
 
-    // Set data
-    if (data && data.length > 0) {
+    // Crosshair Tracker
+    chartRef.current.subscribeCrosshairMove((param) => {
+      if (param.seriesData && param.seriesData.size > 0 && mainSeriesRef.current) {
+        const point = param.seriesData.get(mainSeriesRef.current) as any;
+        if (point) {
+          if (chartType === 'candle') {
+            const change = point.close - point.open;
+            const changePercent = point.open !== 0 ? (change / point.open) * 100 : 0;
+            setHeaderData({ open: point.open, high: point.high, low: point.low, close: point.close, change, changePercent });
+          } else {
+            setHeaderData(prev => prev ? { ...prev, close: point.value } : null);
+          }
+        }
+      }
+    });
+
+    // Reset data tracker to force setData on new series
+    dataTracker.current = { asset: '', interval: '', length: 0, firstTs: 0 };
+  }, [chartType]);
+
+  // 4. Data Processing and Binding
+  useEffect(() => {
+    if (!mainSeriesRef.current || !volumeSeriesRef.current || !data || data.length === 0) return;
+
+    const firstTs = new Date(data[0].timestamp).getTime();
+    const lengthDiff = Math.abs(data.length - dataTracker.current.length);
+    const isNewContext = dataTracker.current.asset !== assetName || dataTracker.current.interval !== activeInterval;
+    const isBulkUpdate = lengthDiff > 1 || firstTs !== dataTracker.current.firstTs;
+
+    if (isNewContext || isBulkUpdate) {
       const sortedData = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       let validData = sortedData.filter(t => !isNaN(new Date(t.timestamp).getTime()));
 
-      // Filter outliers using IQR to remove stale/bad data spikes
       if (validData.length > 5) {
         const prices = validData.map(t => Number(t.close)).filter(p => p > 0).sort((a, b) => a - b);
         if (prices.length > 4) {
           const q1 = prices[Math.floor(prices.length * 0.25)];
           const q3 = prices[Math.floor(prices.length * 0.75)];
           const iqr = q3 - q1;
-          const lowerBound = q1 - 3 * iqr;
-          const upperBound = q3 + 3 * iqr;
           validData = validData.filter(t => {
             const price = Number(t.close);
-            return price >= lowerBound && price <= upperBound;
+            return price >= (q1 - 3 * iqr) && price <= (q3 + 3 * iqr);
           });
         }
       }
 
       if (chartType === 'candle') {
-        const candleData = validData.map((t, i) => {
-          let o = Number(t.open);
-          let c = Number(t.close);
-          let h = Number(t.high);
-          let l = Number(t.low);
-
-          // Force mock variance if API data returned perfectly flat lines
-          if (o === c && h === l && o > 0) {
-            const variance = o * 0.002;
-            const isUp = i % 2 === 0;
-            const volatility = Math.abs(Math.sin(i) * variance);
-            
-            if (isUp) {
-                o = o - volatility;
-                c = c + volatility;
-                h = c + (variance * 0.5);
-                l = o - (variance * 0.5);
-            } else {
-                o = o + volatility;
-                c = c - volatility;
-                h = o + (variance * 0.5);
-                l = c - (variance * 0.5);
-            }
-          }
-
-          return {
-            time: Math.floor(new Date(t.timestamp).getTime() / 1000) as Time,
-            open: o,
-            high: h,
-            low: l,
-            close: c,
-          };
-        });
+        const candleData = validData.map(t => ({
+          time: Math.floor(new Date(t.timestamp).getTime() / 1000) as Time,
+          open: Number(t.open), high: Number(t.high), low: Number(t.low), close: Number(t.close),
+        }));
         const uniqueCandle = Array.from(new Map(candleData.map(item => [item.time, item])).values());
-        (mainSeries as ISeriesApi<"Candlestick">).setData(uniqueCandle);
+        (mainSeriesRef.current as ISeriesApi<"Candlestick">).setData(uniqueCandle);
       } else {
         const lineData = validData.map(t => ({
           time: Math.floor(new Date(t.timestamp).getTime() / 1000) as Time,
           value: Number(t.close),
         }));
         const uniqueLine = Array.from(new Map(lineData.map(item => [item.time, item])).values());
-        (mainSeries as ISeriesApi<"Line">).setData(uniqueLine);
+        if (chartType === 'line') {
+          (mainSeriesRef.current as ISeriesApi<"Line">).setData(uniqueLine);
+        } else {
+          (mainSeriesRef.current as ISeriesApi<"Area">).setData(uniqueLine);
+        }
       }
 
       const volumeData = validData.map(t => ({
@@ -242,45 +268,16 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
         color: Number(t.close) >= Number(t.open) ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)',
       }));
       const uniqueVolume = Array.from(new Map(volumeData.map(item => [item.time, item])).values());
-      volumeSeries.setData(uniqueVolume);
+      volumeSeriesRef.current.setData(uniqueVolume);
 
-      // Fit content initially
-      chart.timeScale().fitContent();
+      chartRef.current?.timeScale().fitContent();
+
+      dataTracker.current = { asset: assetName, interval: activeInterval, length: data.length, firstTs };
+    } else {
+      // Just a minor length change (like a live tick), let the liveTick effect handle visual appending!
+      dataTracker.current.length = data.length;
     }
-
-    // Crosshair move handler
-    chart.subscribeCrosshairMove((param) => {
-      if (param.seriesData && param.seriesData.size > 0) {
-        const point = param.seriesData.get(mainSeries) as any;
-        if (point) {
-          if (chartType === 'candle') {
-            const change = point.close - point.open;
-            const changePercent = point.open !== 0 ? (change / point.open) * 100 : 0;
-            setHeaderData({
-              open: point.open, high: point.high, low: point.low, close: point.close, change, changePercent,
-            });
-          } else {
-            setHeaderData(prev => prev ? { ...prev, close: point.value } : null);
-          }
-        }
-      }
-    });
-
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
-      }
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.remove();
-      chartRef.current = null;
-      mainSeriesRef.current = null;
-      volumeSeriesRef.current = null;
-    };
-  }, [data, chartType, priceScaleMode, autoScale]);
+  }, [data, assetName, activeInterval, chartType]);
 
   // Live tick updates
   useEffect(() => {
@@ -468,6 +465,25 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
   // ========== AREA 5: Bottom range buttons ==========
   const handleRangeChange = (rangeValue: string, bars: number) => {
     setActiveRange(rangeValue);
+    
+    // Automatically select the appropriate interval for the requested range to fit ~200 points
+    let targetInterval = activeInterval;
+    if (rangeValue === '1D') targetInterval = '5m';
+    else if (rangeValue === '5D') targetInterval = '15m';
+    else if (rangeValue === '1M') targetInterval = '4H';
+    else if (rangeValue === '3M') targetInterval = '1d';
+    else if (rangeValue === '6M') targetInterval = '1d';
+    else if (rangeValue === 'YTD' || rangeValue === '1Y') targetInterval = '1w';
+    else if (rangeValue === '5Y' || rangeValue === 'ALL') targetInterval = '1M';
+    
+    // Convert target case if needed to match options (1d, 1w)
+    const normalizedTarget = targetInterval === '1D' ? '1d' : targetInterval === '1W' ? '1w' : targetInterval;
+
+    if (normalizedTarget !== activeInterval) {
+      setActiveInterval(normalizedTarget);
+      onIntervalChange?.(normalizedTarget);
+    }
+
     if (!chartRef.current) return;
     const timeScale = chartRef.current.timeScale();
 
@@ -476,13 +492,10 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
       return;
     }
 
-    // Set visible range to last N bars
-    const range = timeScale.getVisibleLogicalRange();
-    if (range) {
-      const totalBars = data.length;
-      const from = Math.max(0, totalBars - bars);
-      timeScale.setVisibleLogicalRange({ from, to: totalBars });
-    }
+    // Set visible range, bounded by actual data length
+    const totalBars = data.length;
+    const from = Math.max(0, totalBars - bars);
+    timeScale.setVisibleLogicalRange({ from, to: totalBars });
   };
 
   const handleTogglePercent = () => {
@@ -553,6 +566,9 @@ export function TradingChart({ data, liveTick, assetName, onIntervalChange }: Tr
 
           {/* Chart Types */}
           <div className="flex items-center gap-1 shrink-0">
+            <button onClick={() => handleChartTypeChange('area')} className={`p-1.5 rounded transition-colors ${chartType === 'area' ? 'text-bullish bg-bullish/10' : 'text-text-secondary hover:text-foreground hover:bg-surface'} `} title="Area">
+              <Activity className="h-4 w-4" />
+            </button>
             <button onClick={() => handleChartTypeChange('candle')} className={`p-1.5 rounded transition-colors ${chartType === 'candle' ? 'text-bullish bg-bullish/10' : 'text-text-secondary hover:text-foreground hover:bg-surface'} `} title="Candlestick">
               <BarChart2 className="h-4 w-4" />
             </button>
