@@ -620,3 +620,7 @@ target frontend: failed to solve: process "/bin/sh -c cd apps/frontend && npm ru
 
 
 View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/p8inmwlt07t0rmqgbuym3zwzq
+
+
+##  Error - 1
+it's not showing any live chart and market news at ramversingh.com url, check it why it's happening

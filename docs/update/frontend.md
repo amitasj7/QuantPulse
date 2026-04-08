@@ -146,3 +146,9 @@ then if i select silver in chart then news will show related to silver.
 - there will be 2 tag 
   - first: stock name like silver, gold etc.
   - second: positive, negative or neutral.
+
+## update - 10
+I want a admin panel login with email/mobile no and password.
+- admin can be add/remove other stocks.
+- in dashboard page, upper right corner admin profile icon with image should be visible.
+- admin can change his profile.

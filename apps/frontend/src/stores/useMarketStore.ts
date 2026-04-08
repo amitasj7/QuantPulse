@@ -38,6 +38,8 @@ interface MarketState {
   fetchForexRate: () => Promise<void>;
   updateLiveTick: (tick: NormalizedTick) => void;
   setSelectedAssetId: (assetId: string) => void;
+  addCommodity: (commodity: Commodity) => void;
+  removeCommodity: (assetId: string) => void;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -159,5 +161,24 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({ selectedAssetId: assetId });
     get().fetchHistory(assetId);
     get().fetchNews(assetId);
+  },
+
+  addCommodity: (commodity: Commodity) => {
+    set((state) => ({
+      commodities: { ...state.commodities, [commodity.assetId]: commodity }
+    }));
+  },
+
+  removeCommodity: (assetId: string) => {
+    set((state) => {
+      const newComms = { ...state.commodities };
+      delete newComms[assetId];
+      // Switch selected asset if the deleted one was selected
+      let newSelected = state.selectedAssetId;
+      if (newSelected === assetId) {
+        newSelected = Object.keys(newComms)[0] || 'MCX_GOLD';
+      }
+      return { commodities: newComms, selectedAssetId: newSelected };
+    });
   }
 }));
