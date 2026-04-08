@@ -33,6 +33,7 @@ interface MarketState {
   
   // Actions
   fetchInitialData: () => Promise<void>;
+  refreshPrices: () => Promise<void>;
   fetchHistory: (assetId: string, interval?: string) => Promise<void>;
   fetchNews: (commodityId?: string) => Promise<void>;
   fetchForexRate: () => Promise<void>;
@@ -64,12 +65,31 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       const solarMap: Record<string, Commodity> = {};
       const liveTicksMap: Record<string, NormalizedTick> = { ...get().liveTicks };
 
+      // Helper: map a DB PriceHistory row into a valid NormalizedTick
+      const toTick = (assetId: string, row: any): NormalizedTick => {
+        const priceINR = Number(row.priceINR) || 0;
+        const priceUSD = Number(row.priceUSD) || 0;
+        return {
+          assetId,
+          priceINR,
+          priceUSD,
+          open: Number(row.open) || priceINR,
+          high: Number(row.high) || priceINR,
+          low: Number(row.low) || priceINR,
+          close: Number(row.close) || priceINR,
+          volume: Number(row.volume) || 0,
+          percentChange: Number(row.percentChange) || 0,
+          sourceProvider: (row.sourceProvider as 'BROKER' | 'GLOBAL_API') || 'BROKER',
+          interval: row.interval || 'raw',
+          timestamp: new Date(row.timestamp),
+        };
+      };
+
       comms.forEach((c: any) => {
         commMap[c.assetId] = c;
+        // Always seed liveTick from latest DB price row (overwritten by WS later)
         if (c.prices && c.prices.length > 0) {
-          if (!liveTicksMap[c.assetId]) {
-             liveTicksMap[c.assetId] = c.prices[0];
-          }
+          liveTicksMap[c.assetId] = toTick(c.assetId, c.prices[0]);
         }
       });
 
@@ -77,7 +97,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         solarMap[s.assetId] = s;
         if (s.prices && s.prices.length > 0) {
           if (!liveTicksMap[s.assetId]) {
-            liveTicksMap[s.assetId] = s.prices[0];
+            liveTicksMap[s.assetId] = toTick(s.assetId, s.prices[0]);
           }
         }
       });
@@ -96,6 +116,60 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     } catch (e) {
       console.error('Failed to fetch initial market data', e);
       set({ loading: false });
+    }
+  },
+
+  refreshPrices: async () => {
+    try {
+      const [comms, solar] = await Promise.all([
+        getCommodities(),
+        getSolarMetrics(),
+      ]);
+
+      const toTick = (assetId: string, row: any): NormalizedTick => {
+        const priceINR = Number(row.priceINR) || 0;
+        const priceUSD = Number(row.priceUSD) || 0;
+        return {
+          assetId,
+          priceINR,
+          priceUSD,
+          open: Number(row.open) || priceINR,
+          high: Number(row.high) || priceINR,
+          low: Number(row.low) || priceINR,
+          close: Number(row.close) || priceINR,
+          volume: Number(row.volume) || 0,
+          percentChange: Number(row.percentChange) || 0,
+          sourceProvider: (row.sourceProvider as 'BROKER' | 'GLOBAL_API') || 'BROKER',
+          interval: row.interval || 'raw',
+          timestamp: new Date(row.timestamp),
+        };
+      };
+
+      set((state) => {
+        const liveTicksMap = { ...state.liveTicks };
+        // Update ticks from DB only if no more recent WS tick exists
+        comms.forEach((c: any) => {
+          if (c.prices && c.prices.length > 0) {
+            const dbTick = toTick(c.assetId, c.prices[0]);
+            const existing = liveTicksMap[c.assetId];
+            if (!existing || new Date(dbTick.timestamp) >= new Date(existing.timestamp)) {
+              liveTicksMap[c.assetId] = dbTick;
+            }
+          }
+        });
+        solar.forEach((s: any) => {
+          if (s.prices && s.prices.length > 0) {
+            const dbTick = toTick(s.assetId, s.prices[0]);
+            const existing = liveTicksMap[s.assetId];
+            if (!existing || new Date(dbTick.timestamp) >= new Date(existing.timestamp)) {
+              liveTicksMap[s.assetId] = dbTick;
+            }
+          }
+        });
+        return { liveTicks: liveTicksMap };
+      });
+    } catch (e) {
+      console.error('Failed to refresh prices', e);
     }
   },
 

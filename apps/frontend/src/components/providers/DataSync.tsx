@@ -9,6 +9,7 @@ export function DataSync() {
     commodities, 
     solarAssets, 
     fetchInitialData,
+    refreshPrices,
     updateLiveTick,
     selectedAssetId 
   } = useMarketStore();
@@ -24,11 +25,18 @@ export function DataSync() {
       updateLiveTick(tick);
     });
 
+    // Poll DB prices every 30s to keep cards/ticker fresh for assets
+    // that may not have active WebSocket ticks
+    const priceRefreshInterval = setInterval(() => {
+      refreshPrices();
+    }, 30_000);
+
     return () => {
       unsubscribe();
       socketClient.disconnect();
+      clearInterval(priceRefreshInterval);
     };
-  }, [fetchInitialData, updateLiveTick, selectedAssetId]);
+  }, [fetchInitialData, refreshPrices, updateLiveTick, selectedAssetId]);
 
   // Handle Subscriptions whenever assets change
   useEffect(() => {

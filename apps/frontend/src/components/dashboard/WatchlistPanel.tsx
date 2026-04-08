@@ -138,12 +138,12 @@ export function WatchlistPanel() {
                     </div>
 
                     {/* Change */}
-                    <div className={`text-right text-[12px] ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
+                    <div className={`text-right text-[12px] ${isUp ? 'text-bullish' : 'text-bearish'}`}>
                       {change !== 0 ? (change > 0 ? '+' : '') + change.toFixed(1) : '—'}
                     </div>
 
                     {/* Change % */}
-                    <div className={`text-right text-[12px] font-medium tracking-tight ${isUp ? 'text-[#089981]' : 'text-[#F23645]'}`}>
+                    <div className={`text-right text-[12px] font-medium tracking-tight ${isUp ? 'text-bullish' : 'text-bearish'}`}>
                       {changePercent !== 0 ? (changePercent > 0 ? '+' : '') + changePercent.toFixed(2) + '%' : '—'}
                     </div>
                   </button>

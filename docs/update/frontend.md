@@ -263,5 +263,216 @@ Act like an engineer fixing a production trading dashboard, not like a beginner 
 
 
 ## update - 
-you should make component from @beautifulMentionbecause this file code is so long. make component and write logic algo in other file. make small code of this file.
+you should make component from apps\frontend\src\components\charts\TradingChart.tsx this file code is so long. make component and write logic algo in other file. make small code of this file.
 
+Trading Chart Refactor + Time Filter + TradingView Style Behavior
+
+You are a Senior Frontend Engineer experienced in React, Next.js, TypeScript, real-time charting systems, and scalable frontend architecture.
+
+I want to refactor and improve my TradingChart implementation and also fix filter and time-range behavior.
+
+Problem 1: File Too Large (Refactoring Required)
+
+Current file:
+
+apps/frontend/src/components/charts/TradingChart.tsx
+
+This file has become very large and hard to maintain.
+
+Refactor Requirements:
+Component Separation:
+
+Break this file into smaller reusable components such as:
+
+Example structure (you may improve it):
+
+charts/
+│
+├── TradingChart.tsx              (main container – small & clean)
+├── ChartCanvas.tsx              (chart rendering)
+├── ChartToolbar.tsx             (top controls)
+├── TimeRangeFilter.tsx          (1D,5D,1M etc)
+├── ChartLegend.tsx              (optional)
+├── useTradingChart.ts           (custom hook)
+├── chartUtils.ts                (helper functions)
+├── chartConfig.ts               (config/constants)
+
+you can modify this files by yourself.
+Required Refactor Rules:
+TradingChart.tsx should become a small orchestration component
+Move business logic into:
+hooks
+utils
+services
+Move chart update algorithms into separate files
+Move filter logic into separate module
+Move data transformation logic outside component
+Reduce component complexity
+Follow clean architecture
+Expected Result:
+
+TradingChart.tsx should only:
+
+Manage layout
+Connect components
+Call hooks
+Pass props
+
+NOT contain:
+
+Complex calculations
+Long useEffects
+Data transformation
+Chart algorithms
+Filter logic
+Problem 2: Time Range Filter (TradingView Style)
+
+Bottom filter options:
+
+1D
+5D
+1M
+3M
+6M
+1Y
+ALL
+Expected behavior:
+
+If user selects 5D:
+
+Fetch last 5 days data
+Show only those candles
+Chart fills full width
+No empty space
+
+If user selects 1M:
+
+Fetch last 1 month
+Auto scale chart
+Full width rendering
+Chart behavior rules:
+Chart must always fill width
+Dynamic time scale
+No fixed domain
+No blank area
+Smooth update
+No full re-render
+Candle Update Behavior:
+
+Like TradingView:
+
+Current candle updates live
+New candles append
+Do NOT recreate full dataset
+Efficient updates
+Smooth rendering
+Technical Expectations:
+
+Follow production engineering practices:
+
+Custom hooks
+Separation of concerns
+Memoization
+Stable references
+Performance optimization
+Proper dependency management
+Clean folder structure
+Reusable architecture
+Tasks:
+Refactor:
+
+1 Analyze TradingChart.tsx
+2 Break into components
+3 Move logic into hooks
+4 Move algorithms into utils
+5 Reduce file size
+6 Improve readability
+
+Feature Fix:
+
+7 Fix filter logic
+8 Implement time range fetching
+9 Fix chart scaling
+10 Implement efficient candle updates
+
+Output Format:
+
+Provide:
+
+1 Refactor Structure
+
+New folder structure
+
+2 Component Breakdown
+
+What goes where
+
+3 Logic Separation Strategy
+4 Updated Implementation Structure
+5 Performance Improvements
+6 Optional Architecture Improvements
+
+Act like an engineer refactoring a production trading dashboard, not like a tutorial teacher.
+
+
+## error -
+Runtime Error
+
+
+
+Value is undefined
+src/components/charts/TradingChart.tsx (122:24) @ TradingChart.useEffect
+
+
+  120 |
+  121 |     if (mainSeriesRef.current) {
+> 122 |       chartRef.current.removeSeries(mainSeriesRef.current);
+      |                        ^
+  123 |       mainSeriesRef.current = null;
+  124 |     }
+  125 |     if (volumeSeriesRef.current) {
+Call Stack
+52
+
+Show 50 ignore-listed frame(s)
+TradingChart.useEffect
+src/components/charts/TradingChart.tsx (122:24)
+Dashboard
+src/app/page.tsx (217:21)
+
+Console Error
+
+
+
+Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).
+src\app\layout.tsx (57:9) @ RootLayout
+
+
+  55 |     >
+  56 |       <head>
+> 57 |         <script
+     |         ^
+  58 |           dangerouslySetInnerHTML={{ __html: themeScript }}
+  59 |           suppressHydrationWarning
+  60 |         />
+Call Stack
+16
+
+## update - 
+1. in upper panel prices are not showing of commodities, fix this.
+2. the main card not showing prices?
+3. update them also
+
+4. check one time price with api call redis and postgresql database what coming price are. then show all prices
+
+
+## update - 
+I have error -
+  - the showing price is not correct. for ex - 
+  - if take gold then 10g gold in inr = almost 71237 but this is wrong price.
+
+- could you check price in databases.
+  - if database is empty then call with api take angle and other api prices. check them.
+  - is this right or not?
+
+- update whole commodities price in this project of all pages, all url, all section
