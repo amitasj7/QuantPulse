@@ -9,7 +9,8 @@ out/
 
 # Turborepo
 .turbo/
-
+.agents/
+.qoder/
 # Environment files
 .env
 .env.local
