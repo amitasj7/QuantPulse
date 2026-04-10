@@ -11,6 +11,23 @@ datasource db {
 }
 
 // ============================================
+// Access & Roles (Admin Panel)
+// ============================================
+
+model Admin {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  mobile       String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@map("admins")
+}
+
+// ============================================
 // Commodity & Asset Models
 // ============================================
 

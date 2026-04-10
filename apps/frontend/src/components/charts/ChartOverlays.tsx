@@ -36,24 +36,24 @@ export const ChartOverlays = memo(function ChartOverlays({
           {chartType === 'candle' && (
             <div className="flex gap-2">
               <span className="text-text-secondary text-[10px]">
-                O <span className="text-foreground font-semibold text-xs">{headerData.open.toFixed(2)}</span>
+                O <span className="text-foreground font-semibold text-xs">{headerData.open != null ? Number(headerData.open).toFixed(2) : '0.00'}</span>
               </span>
               <span className="text-text-secondary text-[10px]">
-                H <span className="text-foreground font-semibold text-xs">{headerData.high.toFixed(2)}</span>
+                H <span className="text-foreground font-semibold text-xs">{headerData.high != null ? Number(headerData.high).toFixed(2) : '0.00'}</span>
               </span>
               <span className="text-text-secondary text-[10px]">
-                L <span className="text-foreground font-semibold text-xs">{headerData.low.toFixed(2)}</span>
+                L <span className="text-foreground font-semibold text-xs">{headerData.low != null ? Number(headerData.low).toFixed(2) : '0.00'}</span>
               </span>
               <span className="text-text-secondary text-[10px]">
                 C{' '}
                 <span className={`font-semibold text-xs ${isUp ? 'text-bullish' : 'text-bearish'}`}>
-                  {headerData.close.toFixed(2)}
+                  {headerData.close != null ? Number(headerData.close).toFixed(2) : '0.00'}
                 </span>
               </span>
               <span className={`font-bold ${isUp ? 'text-bullish' : 'text-bearish'}`}>
                 {headerData.change > 0 && '+'}
-                {headerData.change.toFixed(2)} ({headerData.changePercent > 0 && '+'}
-                {headerData.changePercent.toFixed(2)}%)
+                {headerData.change != null ? Number(headerData.change).toFixed(2) : '0.00'} ({headerData.changePercent > 0 && '+'}
+                {headerData.changePercent != null ? Number(headerData.changePercent).toFixed(2) : '0.00'}%)
               </span>
             </div>
           )}

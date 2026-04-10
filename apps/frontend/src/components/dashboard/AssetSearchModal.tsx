@@ -113,12 +113,12 @@ export function AssetSearchModal() {
                     <div className="text-right flex flex-col items-end">
                       <span className="font-mono font-medium text-foreground">
                         {live 
-                          ? (live.priceINR > 0 ? `₹${live.priceINR.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : `$${live.priceUSD.toFixed(3)}`) 
+                          ? (live.priceINR > 0 ? `₹${live.priceINR.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : `$${(live.priceUSD || 0).toFixed(3)}`) 
                           : '---'}
                       </span>
                       {live && (
                         <span className={`text-xs font-mono font-semibold ${isUp ? 'text-bullish' : 'text-bearish'}`}>
-                          {change > 0 && '+'}{change.toFixed(2)}%
+                          {change > 0 && '+'}{(change || 0).toFixed(2)}%
                         </span>
                       )}
                     </div>

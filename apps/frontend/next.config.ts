@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/:path*`,
       },
+      {
+        source: "/socket.io/:path*",
+        destination: `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/socket.io/:path*`,
+      },
     ];
   },
 };

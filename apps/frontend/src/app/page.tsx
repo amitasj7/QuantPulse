@@ -99,7 +99,7 @@ export default function Dashboard() {
                     <div className="relative group/forex">
                       <Badge variant="outline" className="bg-surface text-foreground border-border px-3 py-1 font-medium text-sm rounded-md cursor-help transition-colors hover:border-text-secondary hover:bg-surface-hover">
                         <DollarSign className="h-3.5 w-3.5 mr-1 text-text-secondary" />
-                        USD/INR: ₹{forexRate.rate.toFixed(2)}
+                        USD/INR: ₹{(forexRate.rate || 0).toFixed(2)}
                       </Badge>
                       
                       {/* Hover Tooltip Card */}
@@ -117,7 +117,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-text-secondary font-medium">Conversion</span>
-                            <span className="font-mono text-foreground font-bold">1 USD = ₹{forexRate.rate.toFixed(3)}</span>
+                            <span className="font-mono text-foreground font-bold">1 USD = ₹{(forexRate.rate || 0).toFixed(3)}</span>
                           </div>
                           <div className="flex justify-between items-start mt-2 pt-2 border-t border-border/40">
                             <span className="text-text-secondary font-medium mt-0.5">Last Synced</span>
@@ -187,7 +187,7 @@ export default function Dashboard() {
                         <div className="flex items-baseline justify-between">
                           <div className="text-3xl font-bold tracking-tight text-foreground">{price}</div>
                           <div className={`flex items-center text-sm font-semibold px-2 py-1 rounded-md ${isUp ? 'text-bullish bg-bullish/10' : 'text-bearish bg-bearish/10'}`}>
-                            {change > 0 && '+'}{change.toFixed(2)}%
+                            {change > 0 && '+'}{(change || 0).toFixed(2)}%
                             {isUp ? <ArrowUpRight className="ml-1 h-4 w-4" /> : <ArrowDownRight className="ml-1 h-4 w-4" />}
                           </div>
                         </div>

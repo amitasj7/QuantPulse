@@ -401,7 +401,7 @@ export function TradingChart({
     setAutoScale(prev => !prev);
   }, []);
 
-  const lastPrice = headerData ? headerData.close.toFixed(2) : '0.00';
+  const lastPrice = headerData?.close != null ? Number(headerData.close).toFixed(2) : '0.00';
 
   return (
     <div className="w-full h-full flex flex-col bg-surface border-none overflow-hidden shrink-0">

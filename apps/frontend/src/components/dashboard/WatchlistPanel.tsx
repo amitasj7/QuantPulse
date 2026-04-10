@@ -103,7 +103,7 @@ export function WatchlistPanel() {
                 const formattedPrice = tick
                   ? (tick.priceINR > 0 
                       ? tick.priceINR.toLocaleString('en-IN', { maximumFractionDigits: 2 })
-                      : tick.priceUSD.toFixed(3))
+                      : (tick.priceUSD || 0).toFixed(3))
                   : '—';
 
                 return (
@@ -139,12 +139,12 @@ export function WatchlistPanel() {
 
                     {/* Change */}
                     <div className={`text-right text-[12px] ${isUp ? 'text-bullish' : 'text-bearish'}`}>
-                      {change !== 0 ? (change > 0 ? '+' : '') + change.toFixed(1) : '—'}
+                      {change !== 0 ? (change > 0 ? '+' : '') + (change || 0).toFixed(1) : '—'}
                     </div>
 
                     {/* Change % */}
                     <div className={`text-right text-[12px] font-medium tracking-tight ${isUp ? 'text-bullish' : 'text-bearish'}`}>
-                      {changePercent !== 0 ? (changePercent > 0 ? '+' : '') + changePercent.toFixed(2) + '%' : '—'}
+                      {changePercent !== 0 ? (changePercent > 0 ? '+' : '') + (changePercent || 0).toFixed(2) + '%' : '—'}
                     </div>
                   </button>
                 );

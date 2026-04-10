@@ -25,8 +25,8 @@ export function TickerTape() {
       unit: meta.unit || 'Contract',
       category: meta.category || 'Commodity',
       exchange: meta.exchange || 'LIVE',
-      price: tick.priceINR > 0 ? `₹${tick.priceINR.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : `$${tick.priceUSD.toFixed(3)}`,
-      change: `${tick.percentChange > 0 ? '+' : ''}${tick.percentChange.toFixed(2)}%`,
+      price: tick.priceINR > 0 ? `₹${tick.priceINR.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : `$${(tick.priceUSD || 0).toFixed(3)}`,
+      change: `${tick.percentChange > 0 ? '+' : ''}${(tick.percentChange || 0).toFixed(2)}%`,
       up: tick.percentChange >= 0,
     };
   });

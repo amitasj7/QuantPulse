@@ -276,6 +276,32 @@ export class AngelOneConnector {
     }
   }
 
+  public async reloadScrips() {
+    console.log('[AngelOne Hot-Reload] Refreshing token lists from Scrip Master...');
+    await this.loadScripMaster();
+    
+    // If WS is already connected, dynamically append the new subscriptions!
+    if (this.wsConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
+      const tokenList = this.scripTokens.map(s => s.symboltoken);
+      const subscribeMsg = JSON.stringify({
+        correlationID: `quant_reload_${Date.now()}`,
+        action: 1, // Subscribe
+        params: {
+          mode: 2, // 2 = Quote
+          tokenList: [
+            {
+              exchangeType: 5, // MCX
+              tokens: tokenList,
+            },
+          ],
+        },
+      });
+
+      this.ws.send(subscribeMsg);
+      console.log(`[AngelOne Hot-Reload] Successfully sent updated subscription for ${tokenList.length} tokens.`);
+    }
+  }
+
   private disconnectWebSocket() {
     if (this.ws) {
       this.ws.removeAllListeners();

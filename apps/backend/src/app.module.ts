@@ -7,10 +7,12 @@ import { SolarModule } from './modules/solar/solar.module';
 import { NewsModule } from './modules/news/news.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
     PrismaModule,
+    AuthModule,
     CommoditiesModule,
     SolarModule,
     NewsModule,

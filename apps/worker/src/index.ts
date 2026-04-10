@@ -205,9 +205,6 @@ async function bootstrap() {
   }
 
   let angelOne: AngelOneConnector | null = null;
-  // Currently disabling Angel One websocket because it maps to incorrect mini/petal contracts
-  // resulting in bad prices. TwelveData acts as our reliable "Gold Standard".
-  /*
   if (angelReady) {
     angelOne = new AngelOneConnector(processTick, {
       apiKey: BROKER_API_KEY!,
@@ -216,7 +213,33 @@ async function bootstrap() {
       totpSecret: ANGEL_TOTP_SECRET!,
     });
   }
-  */
+
+  // ==========================================
+  // SYSTEM BUS: Listen for dynamic add/remove events
+  // ==========================================
+  const systemRedis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+  systemRedis.subscribe('market:system');
+  systemRedis.on('message', async (channel, message) => {
+    if (channel === 'market:system') {
+      try {
+        const data = JSON.parse(message);
+        if (data.action === 'UPDATE_ASSET') {
+          console.log(`[Worker] Detected database update for ${data.symbol}. Hot-reloading connectors...`);
+          
+          // Re-sync Asset DB Mappings
+          const latestCommodities = await prisma.commodity.findMany();
+          assetIdMap.clear();
+          latestCommodities.forEach((c: any) => assetIdMap.set(c.assetId, c.id));
+          
+          if (angelOne) {
+            await angelOne.reloadScrips();
+          }
+        }
+      } catch (e) {
+        console.error('[Worker] Failed to parse system msg', e);
+      }
+    }
+  });
 
   // ==========================================
   // START ALL CONNECTORS
@@ -236,8 +259,8 @@ async function bootstrap() {
   // News
   if (newsConnector) newsConnector.start();
 
-  // MCX broker (Angel One WebSocket) - Currently disabled
-  // if (angelOne) await angelOne.start();
+  // MCX broker (Angel One WebSocket)
+  if (angelOne) await angelOne.start();
 
   // Print final status table
   console.log('\n' + '═'.repeat(60));
@@ -257,7 +280,7 @@ async function bootstrap() {
     if (twelveData) twelveData.stop();
     if (alphaVantage) alphaVantage.stop();
     if (newsConnector) newsConnector.stop();
-    // if (angelOne) angelOne.stop();
+    if (angelOne) angelOne.stop();
     if (dbWriteInterval) clearInterval(dbWriteInterval);
     redis.quit();
     await prisma.$disconnect();

@@ -35,6 +35,26 @@ async function main() {
   }
 
   console.log(`✅ Seeded ${allAssets.length} commodity definitions.`);
+
+  // --- Seed Default Admin ---
+  console.log('🌱 Seeding Default Admin...');
+  const bcrypt = await import('bcrypt');
+  const adminPassword = process.env.ADMIN_PASSWORD || 'quantpulse2026';
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+  
+  await prisma.admin.upsert({
+    where: { email: 'admin@quantpulse.com' },
+    update: { passwordHash },
+    create: {
+      name: 'Super Admin',
+      email: 'admin@quantpulse.com',
+      mobile: '1234567890',
+      passwordHash: passwordHash,
+      role: 'ADMIN',
+    },
+  });
+  console.log(`✅ Default admin created: admin@quantpulse.com`);
+
   console.log('');
   console.log('ℹ️  No fake price history generated.');
   console.log('    Real prices will be fetched by the Worker using your API keys.');
